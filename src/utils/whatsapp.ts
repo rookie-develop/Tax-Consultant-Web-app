@@ -13,17 +13,12 @@ export function generateWhatsAppMessage(
     return subService.customMessageTemplate(category.title, subService.title, config.firmName);
   }
 
-  // Standard professional ARSCA request template
+  // Standard clean, short ARSCA request template
   return `Hello ${config.firmName} Team,
 
-I would like to enquire / request assistance regarding *${subService.title}* (${category.title}).
+I need assistance with *${subService.title}* (${category.title}).
 
-Please guide me regarding:
-• Required documents checklist
-• Filing process & estimated timeline
-• Applicable service fees
-
-Looking forward to your guidance. Thank you!`;
+Please share the required documents and process. Thank you!`;
 }
 
 /**

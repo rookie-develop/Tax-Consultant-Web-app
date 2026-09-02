@@ -14,7 +14,6 @@ import {
 import { AppConfig, ServiceCategory, SubService } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
 import { Header } from './components/Header';
-import { StepIndicator } from './components/StepIndicator';
 import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
 import { WhatsAppRequestView } from './components/WhatsAppRequestView';
@@ -71,15 +70,6 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8">
-        {/* Step Indicator */}
-        <StepIndicator
-          currentStep={currentStep}
-          categoryTitle={selectedCategory?.shortTitle}
-          subServiceTitle={selectedSubService?.title}
-          onGoToStep1={handleGoToStep1}
-          onGoToStep2={handleGoToStep2}
-        />
-
         {/* View Transitions */}
         <AnimatePresence mode="wait">
           {/* STEP 1: Main Category Selection */}
@@ -93,16 +83,12 @@ export default function App() {
               className="space-y-6 sm:space-y-8"
             >
               {/* Hero Title & Description */}
-              <div className="text-center max-w-2xl mx-auto space-y-2.5 sm:space-y-3 px-1">
-                <div className="inline-flex items-center space-x-1.5 sm:space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 text-[10px] sm:text-xs font-black uppercase tracking-widest border border-emerald-500/30">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                  <span>ARSCA Tax Compliance Service Web Portal</span>
-                </div>
+              <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
                 <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-                  Select Your Required Tax Service
+                  How can we help you today?
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                  Choose a compliance service category below to generate your direct WhatsApp consultation request for the {config.firmName} Tax Consultant Team.
+                <p className="text-sm sm:text-base text-slate-500 font-medium">
+                  Choose a service to get started.
                 </p>
               </div>
 
