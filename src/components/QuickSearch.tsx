@@ -80,9 +80,9 @@ export const QuickSearch: React.FC<QuickSearchProps> = ({
                 }}
                 className="w-full text-left p-2.5 sm:p-3 rounded-lg hover:bg-emerald-50/70 active:bg-emerald-100/70 border border-transparent hover:border-emerald-200 transition-all flex items-center justify-between gap-2.5 group cursor-pointer min-h-[48px] touch-manipulation"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center space-x-1.5 sm:space-x-2">
-                    <span className="text-[9px] sm:text-[10px] uppercase font-black px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0">
+                <div className="min-w-0 flex-1 pr-1">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className="text-[9px] sm:text-[10px] uppercase font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0">
                       {category.shortTitle}
                     </span>
                     <h5 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-950 truncate">
@@ -94,7 +94,7 @@ export const QuickSearch: React.FC<QuickSearchProps> = ({
                   </p>
                 </div>
                 <div className="shrink-0 flex items-center space-x-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-emerald-600 group-hover:text-emerald-700">
-                  <span>Select</span>
+                  <span className="hidden min-[380px]:inline">Select</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </button>

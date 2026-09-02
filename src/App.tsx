@@ -84,7 +84,7 @@ export default function App() {
             >
               {/* Hero Title & Description */}
               <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
-                <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 leading-tight">
                   How can we help you today?
                 </h1>
                 <p className="text-sm sm:text-base text-slate-500 font-medium">
@@ -100,7 +100,7 @@ export default function App() {
 
               {/* Categories Grid */}
               <div>
-                <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 mb-3 sm:mb-4">
+                <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
                   <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">
                     Compliance Service Categories ({SERVICE_CATEGORIES.length})
                   </h2>
@@ -141,7 +141,7 @@ export default function App() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto shrink-0 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-black px-6 py-3.5 sm:py-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-sm transition-transform active:scale-95 cursor-pointer min-h-[48px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  className="w-full sm:w-auto shrink-0 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-black px-4 sm:px-6 py-3.5 sm:py-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-sm transition-transform active:scale-95 cursor-pointer min-h-[48px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400 shrink-0" />
                   <span className="whitespace-nowrap">General WhatsApp Inquiry</span>
@@ -163,7 +163,7 @@ export default function App() {
             >
               {/* Top Bar with Category Context */}
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 md:p-6 shadow-2xs space-y-3 sm:space-y-4">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
                   <button
                     id="btn-back-to-categories"
                     type="button"
@@ -174,7 +174,7 @@ export default function App() {
                     <span>All Categories</span>
                   </button>
 
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 shrink-0">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 shrink-0">
                     Step 2: Choose Exact Service
                   </span>
                 </div>
@@ -191,7 +191,7 @@ export default function App() {
 
               {/* Sub-Services Grid */}
               <div>
-                <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 mb-3 sm:mb-4">
+                <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
                     Available Sub-Services in {selectedCategory.shortTitle} ({selectedCategory.subServices.length})
                   </h3>
