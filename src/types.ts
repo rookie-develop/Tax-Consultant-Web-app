@@ -12,7 +12,7 @@ export interface ServiceCategory {
   title: string;
   shortTitle: string;
   tagline: string;
-  iconName: 'FileText' | 'Receipt' | 'PieChart' | 'Building2' | 'ShieldAlert' | 'Calculator' | 'Briefcase' | 'Scale';
+  iconName: 'FileText' | 'Receipt' | 'PieChart' | 'Building2' | 'ShieldAlert' | 'Calculator' | 'Briefcase' | 'Scale' | 'Landmark';
   colorTheme: {
     bg: string;
     border: string;

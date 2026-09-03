@@ -8,6 +8,7 @@ import {
   Calculator,
   Briefcase,
   Scale,
+  Landmark,
   ArrowRight,
 } from 'lucide-react';
 import { ServiceCategory } from '../types';
@@ -27,6 +28,7 @@ const iconMap = {
   Calculator,
   Briefcase,
   Scale,
+  Landmark,
 };
 
 export const CategoryCard: React.FC<CategoryCardProps> = ({
