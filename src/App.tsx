@@ -64,7 +64,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-200 selection:text-slate-900">
+    <div className="min-h-screen bg-[#F4F0E8] text-[#0F201C] flex flex-col font-sans selection:bg-[#23A87B]/25 selection:text-[#081E23]">
       {/* Top Header */}
       <Header config={config} onReset={handleGoToStep1} />
 
@@ -84,10 +84,10 @@ export default function App() {
             >
               {/* Hero Title & Description */}
               <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#0F201C] leading-tight">
                   How can we help you today?
                 </h1>
-                <p className="text-sm sm:text-base text-slate-500 font-medium">
+                <p className="text-sm sm:text-base text-[#5C6E6A] font-medium">
                   Choose a service to get started.
                 </p>
               </div>
@@ -101,10 +101,10 @@ export default function App() {
               {/* Categories Grid */}
               <div>
                 <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
-                  <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                  <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
                     Compliance Service Categories ({SERVICE_CATEGORIES.length})
                   </h2>
-                  <span className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                  <span className="text-[11px] sm:text-xs text-[#5C6E6A] font-medium">
                     Tap any category to view available sub-services
                   </span>
                 </div>
@@ -122,13 +122,13 @@ export default function App() {
               </div>
 
               {/* Helpful Direct Contact Callout */}
-              <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 shadow-2xs">
+              <div className="bg-white rounded-2xl border border-[#E2DDD2] p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                 <div className="space-y-1.5 text-center sm:text-left">
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center justify-center sm:justify-start space-x-2">
-                    <HelpCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <h3 className="text-base sm:text-lg font-black text-[#0F201C] flex items-center justify-center sm:justify-start space-x-2">
+                    <HelpCircle className="w-5 h-5 text-[#23A87B] shrink-0" />
                     <span>Uncertain about which specific service you need?</span>
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 max-w-xl font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#5C6E6A] max-w-xl font-medium leading-relaxed">
                     Connect directly with our senior tax consultants on WhatsApp for personalized advisory, assessment notice evaluation, or corporate compliance audits.
                   </p>
                 </div>
@@ -141,9 +141,9 @@ export default function App() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto shrink-0 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-black px-4 sm:px-6 py-3.5 sm:py-4 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-sm transition-transform active:scale-95 cursor-pointer min-h-[48px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  className="w-full sm:w-auto shrink-0 bg-[#081E23] hover:bg-[#23A87B] active:bg-[#1E9E73] text-white font-black px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-xs transition-all active:scale-95 cursor-pointer min-h-[48px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B]"
                 >
-                  <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400 shrink-0" />
+                  <MessageCircle className="w-4 h-4 text-[#20BA68] fill-[#20BA68] shrink-0" />
                   <span className="whitespace-nowrap">General WhatsApp Inquiry</span>
                   <ChevronRight className="w-4 h-4 shrink-0" />
                 </a>
@@ -162,28 +162,28 @@ export default function App() {
               className="space-y-5 sm:space-y-6"
             >
               {/* Top Bar with Category Context */}
-              <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 md:p-6 shadow-2xs space-y-3 sm:space-y-4">
+              <div className="bg-white rounded-2xl border border-[#E2DDD2] p-4 sm:p-5 md:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2.5">
                   <button
                     id="btn-back-to-categories"
                     type="button"
                     onClick={handleGoToStep1}
-                    className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-slate-800 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 px-3.5 py-2.5 rounded-lg transition-colors cursor-pointer min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0F201C] hover:text-[#23A87B] bg-[#ECE5D8] hover:bg-[#E2DDD2] active:bg-[#D5CEBF] px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B]"
                   >
                     <ArrowLeft className="w-4 h-4 shrink-0" />
                     <span>All Categories</span>
                   </button>
 
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 shrink-0">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#23A87B]/15 text-[#14664B] border border-[#23A87B]/30 shrink-0">
                     Step 2: Choose Exact Service
                   </span>
                 </div>
 
-                <div className="border-t border-slate-100 pt-3 sm:pt-4">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-1 break-words">
+                <div className="border-t border-[#E2DDD2] pt-3 sm:pt-4">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0F201C] tracking-tight mb-1 break-words">
                     {selectedCategory.title}
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-600 font-medium break-words">
+                  <p className="text-xs sm:text-sm text-[#5C6E6A] font-medium break-words">
                     {selectedCategory.tagline}
                   </p>
                 </div>
@@ -192,10 +192,10 @@ export default function App() {
               {/* Sub-Services Grid */}
               <div>
                 <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
                     Available Sub-Services in {selectedCategory.shortTitle} ({selectedCategory.subServices.length})
                   </h3>
-                  <span className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                  <span className="text-[11px] sm:text-xs text-[#5C6E6A] font-medium">
                     Select a service to generate WhatsApp request
                   </span>
                 </div>

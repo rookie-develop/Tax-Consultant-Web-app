@@ -43,41 +43,46 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       type="button"
       id={`category-card-${category.id}`}
       onClick={() => onSelect(category)}
-      className={`w-full flex items-center justify-between p-4 sm:p-5 bg-white rounded-xl text-left group transition-all duration-150 cursor-pointer min-h-[84px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-[0.99] ${
+      className={`w-full flex items-center justify-between bg-white rounded-2xl text-left group transition-all duration-150 cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B] active:scale-[0.99] min-h-[78px] sm:min-h-[86px] ${
         isSelected
-          ? 'border-2 border-emerald-500 shadow-sm bg-emerald-50/25'
-          : 'border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 shadow-2xs hover:shadow-xs'
+          ? 'border-2 border-[#23A87B] shadow-md ring-2 ring-[#23A87B]/20'
+          : 'border border-[#E2DDD2] hover:border-[#23A87B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] hover:shadow-sm'
       }`}
     >
-      <div className="flex items-center space-x-3.5 sm:space-x-4 flex-1 min-w-0 pr-2">
+      <div className="flex items-center flex-1 min-w-0 self-stretch">
+        {/* Full-height Left Green Accent Block matching user reference image */}
         <div
-          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+          className={`w-14 sm:w-16 md:w-18 shrink-0 flex items-center justify-center self-stretch transition-colors ${
             isSelected
-              ? 'bg-emerald-500 text-slate-900'
-              : 'bg-slate-900 text-white group-hover:bg-slate-800'
+              ? 'bg-[#1E9E73]'
+              : 'bg-[#23A87B] group-hover:bg-[#1E9E73]'
           }`}
         >
-          <IconComponent className="w-5 h-5" />
+          <IconComponent className="w-6 h-6 text-[#063326] stroke-[2.2]" />
         </div>
 
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-black text-base sm:text-lg text-slate-900 group-hover:text-emerald-950 transition-colors break-words leading-snug">
+        {/* Text Section */}
+        <div className="flex flex-col min-w-0 flex-1 py-3.5 sm:py-4 px-3.5 sm:px-5">
+          <span className="font-extrabold text-base sm:text-lg text-[#0F201C] group-hover:text-[#1E9E73] transition-colors break-words leading-snug">
             {category.title}
           </span>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium truncate mt-0.5">
+          <p className="text-xs sm:text-sm text-[#5C6E6A] font-medium truncate mt-0.5">
             {category.tagline}
           </p>
         </div>
       </div>
 
-      <div
-        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all group-hover:translate-x-0.5 ml-2 ${
-          isSelected
-            ? 'bg-emerald-500 text-slate-900 shadow-xs'
-            : 'bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700'
-        }`}
-      >
-        <ArrowRight className="w-4 h-4" />
+      {/* Retained Arrow Icon */}
+      <div className="pr-3.5 sm:pr-5 shrink-0">
+        <div
+          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all group-hover:translate-x-0.5 ${
+            isSelected
+              ? 'bg-[#23A87B] text-white shadow-xs'
+              : 'bg-[#F2ECE1] text-[#23A87B] group-hover:bg-[#23A87B] group-hover:text-white'
+          }`}
+        >
+          <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+        </div>
       </div>
     </button>
   );

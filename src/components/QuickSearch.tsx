@@ -50,14 +50,14 @@ export const QuickSearch: React.FC<QuickSearchProps> = ({
             if (e.key === 'Escape') setQuery('');
           }}
           placeholder="Search compliance service (e.g. Salary ITR, GST, Notice, Trading)..."
-          className="w-full pl-10 sm:pl-11 pr-12 py-3 sm:py-3.5 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs transition-all touch-manipulation"
+          className="w-full pl-10 sm:pl-11 pr-12 py-3.5 sm:py-4 bg-white border border-[#E2DDD2] rounded-2xl text-sm sm:text-base font-medium text-[#0F201C] placeholder:text-[#889B96] focus:outline-none focus:ring-2 focus:ring-[#23A87B] focus:border-[#23A87B] shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all touch-manipulation"
         />
         {query && (
           <button
             id="btn-clear-search"
             type="button"
             onClick={() => setQuery('')}
-            className="absolute inset-y-0 right-0 pr-3 pl-2 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer min-w-[44px] min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-r-xl"
+            className="absolute inset-y-0 right-0 pr-3 pl-2 flex items-center justify-center text-[#889B96] hover:text-[#0F201C] cursor-pointer min-w-[44px] min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B] rounded-r-2xl"
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />
@@ -67,7 +67,7 @@ export const QuickSearch: React.FC<QuickSearchProps> = ({
 
       {/* Instant Search Results Dropdown */}
       {query.trim() && (
-        <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl border-2 border-emerald-500 shadow-xl z-20 max-h-[55vh] sm:max-h-80 overflow-y-auto p-1.5 sm:p-2 space-y-1 overscroll-contain">
+        <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl border-2 border-[#23A87B] shadow-xl z-20 max-h-[55vh] sm:max-h-80 overflow-y-auto p-1.5 sm:p-2 space-y-1 overscroll-contain">
           {searchResults.length > 0 ? (
             searchResults.map(({ category, subService }) => (
               <button
@@ -78,29 +78,29 @@ export const QuickSearch: React.FC<QuickSearchProps> = ({
                   onSelectSubService(category, subService);
                   setQuery('');
                 }}
-                className="w-full text-left p-2.5 sm:p-3 rounded-lg hover:bg-emerald-50/70 active:bg-emerald-100/70 border border-transparent hover:border-emerald-200 transition-all flex items-center justify-between gap-2.5 group cursor-pointer min-h-[48px] touch-manipulation"
+                className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-[#F4F0E8] active:bg-[#ECE5D8] border border-transparent hover:border-[#E2DDD2] transition-all flex items-center justify-between gap-2.5 group cursor-pointer min-h-[48px] touch-manipulation"
               >
                 <div className="min-w-0 flex-1 pr-1">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="text-[9px] sm:text-[10px] uppercase font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0">
+                    <span className="text-[9px] sm:text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-[#23A87B]/15 text-[#14664B] shrink-0">
                       {category.shortTitle}
                     </span>
-                    <h5 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-950 truncate">
+                    <h5 className="text-xs sm:text-sm font-bold text-[#0F201C] group-hover:text-[#23A87B] truncate">
                       {subService.title}
                     </h5>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5">
+                  <p className="text-[11px] sm:text-xs text-[#5C6E6A] line-clamp-1 mt-0.5">
                     {subService.shortDesc}
                   </p>
                 </div>
-                <div className="shrink-0 flex items-center space-x-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-emerald-600 group-hover:text-emerald-700">
+                <div className="shrink-0 flex items-center space-x-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#23A87B] group-hover:text-[#1E9E73]">
                   <span className="hidden min-[380px]:inline">Select</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </button>
             ))
           ) : (
-            <div className="p-4 text-center text-xs text-slate-500 font-medium">
+            <div className="p-4 text-center text-xs text-[#5C6E6A] font-medium">
               No matching service found for &ldquo;{query}&rdquo;. Browse categories or request direct WhatsApp assistance.
             </div>
           )}
