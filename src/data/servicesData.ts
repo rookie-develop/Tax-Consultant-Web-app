@@ -62,7 +62,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     title: 'GST Compliance & Filings',
     shortTitle: 'GST Services',
     tagline: 'GST Registrations & Returns',
-    iconName: 'Receipt',
+    iconName: 'IndianRupee',
     colorTheme: {
       bg: 'bg-emerald-50/50',
       border: 'border-emerald-200',

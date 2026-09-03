@@ -9,6 +9,8 @@ import {
   Briefcase,
   Scale,
   Landmark,
+  IndianRupee,
+  ReceiptIndianRupee,
   ArrowRight,
 } from 'lucide-react';
 import { ServiceCategory } from '../types';
@@ -29,6 +31,8 @@ const iconMap = {
   Briefcase,
   Scale,
   Landmark,
+  IndianRupee,
+  ReceiptIndianRupee,
 };
 
 export const CategoryCard: React.FC<CategoryCardProps> = ({
