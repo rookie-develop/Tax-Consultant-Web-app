@@ -105,41 +105,6 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     ],
   },
   {
-    id: 'tds-tcs-services',
-    title: 'TDS & TCS Compliance',
-    shortTitle: 'TDS / TCS Filings',
-    tagline: 'TDS Returns & Certification',
-    iconName: 'PieChart',
-    colorTheme: {
-      bg: 'bg-amber-50/50',
-      border: 'border-amber-200',
-      text: 'text-amber-900',
-      iconBg: 'bg-amber-600 text-white',
-      activeBg: 'hover:border-amber-500 hover:bg-amber-50/80',
-      badgeBg: 'bg-amber-100 text-amber-800',
-    },
-    subServices: [
-      {
-        id: 'quarterly-tds-returns',
-        title: 'Quarterly TDS Returns',
-        shortDesc: 'For salary & vendor TDS return filings',
-        keyHighlights: ['Form 24Q, 26Q & 27Q Filing', 'Challan Reconciliation', 'Form 16 & 16A Generation'],
-      },
-      {
-        id: 'tds-defaults-rectification',
-        title: 'TDS Correction & Default Resolution',
-        shortDesc: 'For short deduction & interest notice fixes',
-        keyHighlights: ['TRACES Notice Settlement', 'Online Correction Statements', 'Challan Matching Fixes'],
-      },
-      {
-        id: 'form-15ca-15cb-certification',
-        title: 'Form 15CA & 15CB Certification',
-        shortDesc: 'For foreign remittance CA certification',
-        keyHighlights: ['Withholding Tax Applicability', 'DTAA Verification', 'Prompt Portal Upload'],
-      },
-    ],
-  },
-  {
     id: 'tax-notices-scrutiny',
     title: 'Tax Notices & Scrutiny',
     shortTitle: 'Notices & Scrutiny',

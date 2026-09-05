@@ -17,7 +17,6 @@ import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
 import { WhatsAppRequestView } from './components/WhatsAppRequestView';
-import { QuickSearch } from './components/QuickSearch';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
 
@@ -42,12 +41,6 @@ export default function App() {
   };
 
   const handleSelectSubService = (subService: SubService) => {
-    setSelectedSubService(subService);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleQuickSearchSelect = (category: ServiceCategory, subService: SubService) => {
-    setSelectedCategory(category);
     setSelectedSubService(subService);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -92,21 +85,12 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Quick Search */}
-              <QuickSearch
-                categories={SERVICE_CATEGORIES}
-                onSelectSubService={handleQuickSearchSelect}
-              />
-
               {/* Categories Grid */}
               <div>
-                <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
+                <div className="mb-3 sm:mb-4">
                   <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
-                    Compliance Service Categories ({SERVICE_CATEGORIES.length})
+                    SERVICES
                   </h2>
-                  <span className="text-[11px] sm:text-xs text-[#5C6E6A] font-medium">
-                    Tap any category to view available sub-services
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5">
@@ -193,7 +177,7 @@ export default function App() {
               <div>
                 <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
-                    Available Sub-Services in {selectedCategory.shortTitle} ({selectedCategory.subServices.length})
+                    CATEGORIES
                   </h3>
                   <span className="text-[11px] sm:text-xs text-[#5C6E6A] font-medium">
                     Select a service to generate WhatsApp request
