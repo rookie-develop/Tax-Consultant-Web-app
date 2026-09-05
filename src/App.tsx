@@ -10,6 +10,7 @@ import {
   HelpCircle,
   ChevronRight,
   Clock,
+  Search,
 } from 'lucide-react';
 import { AppConfig, ServiceCategory, SubService } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
@@ -17,6 +18,7 @@ import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
 import { WhatsAppRequestView } from './components/WhatsAppRequestView';
+import { SearchBar } from './components/SearchBar';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
 
@@ -29,6 +31,7 @@ export default function App() {
   // Step 3: Sub-service selected (shows WhatsApp request generator)
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
@@ -45,9 +48,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSelectServiceFromSearch = (category: ServiceCategory, subService: SubService) => {
+    setSelectedCategory(category);
+    setSelectedSubService(subService);
+    setIsMobileSearchOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleGoToStep1 = () => {
     setSelectedCategory(null);
     setSelectedSubService(null);
+    setIsMobileSearchOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -85,12 +96,60 @@ export default function App() {
                 </p>
               </div>
 
+              {/* Desktop / Laptop / Large Screens Search Bar */}
+              <div className="hidden md:block max-w-xl mx-auto w-full">
+                <SearchBar
+                  categories={SERVICE_CATEGORIES}
+                  onSelectService={handleSelectServiceFromSearch}
+                  placeholder="Search for a service..."
+                />
+              </div>
+
               {/* Categories Grid */}
               <div>
-                <div className="mb-3 sm:mb-4">
-                  <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
+                <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4 min-h-[36px]">
+                  <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A] shrink-0">
                     SERVICES
                   </h2>
+
+                  {/* Mobile Phones Search (Icon / Expandable Field) */}
+                  <div className="md:hidden flex items-center justify-end flex-1 min-w-0">
+                    <AnimatePresence mode="wait" initial={false}>
+                      {!isMobileSearchOpen ? (
+                        <motion.button
+                          key="mobile-search-trigger"
+                          id="btn-mobile-search-trigger"
+                          type="button"
+                          onClick={() => setIsMobileSearchOpen(true)}
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.85 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-[#E2DDD2] text-[#0F201C] hover:text-[#23A87B] hover:border-[#23A87B] active:scale-95 shadow-xs transition-all cursor-pointer"
+                          aria-label="Search for a service"
+                        >
+                          <Search className="w-4 h-4 text-[#0F201C]" />
+                        </motion.button>
+                      ) : (
+                        <motion.div
+                          key="mobile-search-expanded"
+                          initial={{ opacity: 0, width: '40px' }}
+                          animate={{ opacity: 1, width: '100%' }}
+                          exit={{ opacity: 0, width: '40px' }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="w-full max-w-[280px]"
+                        >
+                          <SearchBar
+                            categories={SERVICE_CATEGORIES}
+                            onSelectService={handleSelectServiceFromSearch}
+                            placeholder="Search for a service..."
+                            autoFocus
+                            onClose={() => setIsMobileSearchOpen(false)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5">
