@@ -1,1 +1,14 @@
-
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.arsca.taxconsultant",
+      "sha256_cert_fingerprints": [
+        "69:F3:93:53:FD:34:D0:3F:F5:BE:6F:28:BF:9B:8A:B9:E9:F4:02:14:E9:5E:44:E6:B5:8A:9D:34:FF:2B:EA:B6"
+      ]
+    }
+  }
+]
