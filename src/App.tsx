@@ -19,6 +19,9 @@ import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
 import { WhatsAppRequestView } from './components/WhatsAppRequestView';
 import { SearchBar } from './components/SearchBar';
+import { ComingSoonModal } from './components/ComingSoonModal';
+import { ComplaintModal } from './components/ComplaintModal';
+import { ChannelModal } from './components/ChannelModal';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
 
@@ -32,6 +35,9 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | null>(null);
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
 
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
@@ -70,7 +76,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F0E8] text-[#0F201C] flex flex-col font-sans selection:bg-[#23A87B]/25 selection:text-[#081E23]">
       {/* Top Header */}
-      <Header config={config} onReset={handleGoToStep1} />
+      <Header
+        config={config}
+        onReset={handleGoToStep1}
+        onOpenModal={(feat) => setModalFeature(feat)}
+        onOpenComplaint={() => setIsComplaintModalOpen(true)}
+        onOpenChannel={() => setIsChannelModalOpen(true)}
+      />
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8">
@@ -279,7 +291,31 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer config={config} />
+      <Footer
+        config={config}
+        onOpenModal={(feat) => setModalFeature(feat)}
+        onOpenComplaint={() => setIsComplaintModalOpen(true)}
+        onOpenChannel={() => setIsChannelModalOpen(true)}
+      />
+
+      {/* Coming Soon Placeholder Modal for Login and Cloud Access */}
+      <ComingSoonModal
+        isOpen={!!modalFeature}
+        title={modalFeature || ''}
+        onClose={() => setModalFeature(null)}
+      />
+
+      {/* Complaint Confirmation Modal */}
+      <ComplaintModal
+        isOpen={isComplaintModalOpen}
+        onClose={() => setIsComplaintModalOpen(false)}
+      />
+
+      {/* Channel Confirmation Modal */}
+      <ChannelModal
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+      />
     </div>
   );
 }

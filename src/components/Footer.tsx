@@ -1,13 +1,21 @@
 import React from 'react';
-import { ShieldCheck, MessageCircle } from 'lucide-react';
+import { ShieldCheck, MessageCircle, LogIn, Mail, Radio, Cloud } from 'lucide-react';
 import { AppConfig } from '../types';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface FooterProps {
   config: AppConfig;
+  onOpenModal?: (feature: 'Login' | 'Cloud Access') => void;
+  onOpenComplaint?: () => void;
+  onOpenChannel?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ config }) => {
+export const Footer: React.FC<FooterProps> = ({
+  config,
+  onOpenModal,
+  onOpenComplaint,
+  onOpenChannel,
+}) => {
   const directWaUrl = buildWhatsAppUrl(
     config.whatsappNumber,
     `Hello ${config.firmName} Tax Team, I have an inquiry regarding tax consultation and filing services.`
@@ -55,7 +63,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
             </div>
           </div>
 
-          {/* Confidentiality Notice */}
+          {/* Confidentiality Notice & Utilities */}
           <div className="space-y-2 sm:space-y-2.5">
             <h4 className="text-white font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-[#20BA68] shrink-0" />
@@ -64,6 +72,51 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
             <p className="text-[#88A9A2] text-xs leading-relaxed">
               All financial documentation and tax filings handled by ARSCA are strictly confidential and protected under professional tax consultant standards.
             </p>
+
+            {/* Quick Links */}
+            <div className="pt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-[#88A9A2]">
+              {onOpenModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenModal('Login')}
+                  className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <LogIn className="w-3 h-3 text-[#20BA68]" />
+                  <span>Login</span>
+                </button>
+              )}
+              {onOpenComplaint && (
+                <button
+                  type="button"
+                  onClick={onOpenComplaint}
+                  className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <Mail className="w-3 h-3 text-[#20BA68]" />
+                  <span>Complaint</span>
+                </button>
+              )}
+              {onOpenChannel && (
+                <button
+                  id="footer-nav-channel"
+                  type="button"
+                  onClick={onOpenChannel}
+                  className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <Radio className="w-3 h-3 text-[#20BA68]" />
+                  <span>Channel</span>
+                </button>
+              )}
+              {onOpenModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenModal('Cloud Access')}
+                  className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <Cloud className="w-3 h-3 text-[#20BA68]" />
+                  <span>Cloud Access</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -76,4 +129,3 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
     </footer>
   );
 };
-
