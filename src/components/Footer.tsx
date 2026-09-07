@@ -32,7 +32,7 @@ export const Footer: React.FC<FooterProps> = ({
                 {config.firmName}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-[#20BA68] font-bold">
-                Tax Compliance v1.0
+                V1.3
               </span>
             </div>
             <p className="text-[#88A9A2] text-xs leading-relaxed">
