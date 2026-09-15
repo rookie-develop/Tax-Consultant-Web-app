@@ -30,8 +30,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       setAuthenticatedUser(user);
       setShowSuccessModal(true);
     } catch (error: unknown) {
-      console.error('Firebase Google Sign-In error:', error);
       const details = getAuthErrorDetails(error);
+      if (details.code === 'auth/popup-closed-by-user' || details.code === 'auth/cancelled-popup-request') {
+        console.info('Google sign-in popup was closed by user.');
+      } else {
+        console.error('Firebase Google Sign-In error:', error);
+      }
       setAuthError(details);
     } finally {
       setIsLoading(false);
@@ -128,6 +132,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </button>
                 </div>
 
+                {/* Diagnostic technical details */}
+                <div className="bg-white/80 rounded border border-amber-300 p-2 font-mono text-[10.5px] space-y-0.5 text-amber-950">
+                  <div><span className="font-bold text-amber-900">error.code:</span> {authError.code}</div>
+                  <div><span className="font-bold text-amber-900">error.name:</span> {authError.name}</div>
+                  <div className="break-words"><span className="font-bold text-amber-900">error.message:</span> {authError.message}</div>
+                </div>
+
                 {/* Quick Steps */}
                 <div className="text-[11px] text-amber-800 space-y-1 pt-1 border-t border-amber-200/60">
                   <p className="font-semibold text-amber-900">How to authorize in 30 seconds:</p>
@@ -152,9 +163,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   </div>
                 )}
               </div>
+            ) : (authError.code === 'auth/popup-closed-by-user' || authError.code === 'auth/cancelled-popup-request') ? (
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs leading-relaxed space-y-2">
+                <div className="flex items-center space-x-2 font-bold text-slate-800 text-xs">
+                  <AlertCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>Sign-in window was closed</span>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  Google sign-in was not completed because the window was closed. Click <strong>Continue with Google</strong> below to try again.
+                </p>
+                {typeof window !== 'undefined' && window.self !== window.top && (
+                  <div className="text-[10.5px] text-slate-500 pt-1.5 border-t border-slate-200/70">
+                    If the popup closed automatically without prompting, your browser may be blocking cross-origin popups inside the preview frame.{' '}
+                    <a
+                      href={window.location.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#20BA68] font-bold underline hover:text-[#189653] inline-flex items-center space-x-0.5 ml-1"
+                    >
+                      <span>Open in new tab</span>
+                      <ExternalLink className="w-2.5 h-2.5 inline ml-0.5" />
+                    </a>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium leading-relaxed">
-                {authError.message}
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium leading-relaxed space-y-1.5">
+                <div className="font-bold text-red-900 text-xs flex items-center space-x-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                  <span>Firebase Authentication Error</span>
+                </div>
+                <div className="bg-white/90 rounded border border-red-200 p-2 font-mono text-[11px] space-y-1 text-red-950">
+                  <div><span className="font-bold text-red-800">error.code:</span> {authError.code}</div>
+                  <div><span className="font-bold text-red-800">error.name:</span> {authError.name}</div>
+                  <div className="break-words"><span className="font-bold text-red-800">error.message:</span> {authError.message}</div>
+                </div>
               </div>
             )}
           </div>

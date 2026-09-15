@@ -114,6 +114,7 @@ export const subscribeToAuthChanges = (
 
 export interface AuthErrorInfo {
   code: string;
+  name: string;
   message: string;
   isUnauthorizedDomain: boolean;
   domain: string;
@@ -124,33 +125,41 @@ export const getAuthErrorDetails = (error: unknown): AuthErrorInfo => {
   const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
   const projId = firebaseConfig.projectId || '';
 
-  if (!error || typeof error !== 'object') {
+  if (!error) {
     return {
-      code: 'unknown',
-      message: 'Authentication could not be completed. Please try again.',
+      code: 'no-error-object',
+      name: 'Error',
+      message: 'An unknown error occurred (null or undefined error received).',
       isUnauthorizedDomain: false,
       domain: currentDomain,
       projectId: projId,
     };
   }
 
-  const err = error as { code?: string; message?: string };
-  const code = err.code || '';
+  const err = error as { code?: string; message?: string; name?: string };
+  const code = err.code || (error instanceof Error && 'code' in error ? String((error as any).code) : 'no-code');
+  const name = err.name || (error instanceof Error ? error.name : 'UnknownError');
+  const rawMessage = err.message || (error instanceof Error ? error.message : String(error));
 
-  if (code === 'auth/unauthorized-domain') {
-    return {
+  const isUnauthorized = code === 'auth/unauthorized-domain' || rawMessage.includes('auth/unauthorized-domain');
+  const isCancelled = code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request';
+
+  if (!isCancelled) {
+    console.error('[Firebase Auth Error]', {
       code,
-      message: `The domain "${currentDomain}" is not in the Authorized Domains list of your Firebase project.`,
-      isUnauthorizedDomain: true,
-      domain: currentDomain,
-      projectId: projId,
-    };
+      name,
+      message: rawMessage,
+      error,
+    });
+  } else {
+    console.info('[Firebase Auth Info] Popup was closed before completion.');
   }
 
   return {
     code,
-    message: getAuthErrorMessage(error),
-    isUnauthorizedDomain: false,
+    name,
+    message: rawMessage,
+    isUnauthorizedDomain: isUnauthorized,
     domain: currentDomain,
     projectId: projId,
   };
