@@ -1,5 +1,4 @@
 import { AppConfig, ServiceCategory } from '../types';
-export { ARSCA_CLOUD_FOLDER_URL } from '../config/cloudConfig';
 
 export const DEFAULT_CONFIG: AppConfig = {
   firmName: 'ARSCA',

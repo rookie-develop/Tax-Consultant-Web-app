@@ -7,10 +7,9 @@ import { buildWhatsAppUrl } from '../utils/whatsapp';
 interface HeaderProps {
   config: AppConfig;
   onReset: () => void;
-  onOpenModal: (feature: 'Login') => void;
+  onOpenModal: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint: () => void;
   onOpenChannel: () => void;
-  onOpenCloudAccess: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,7 +18,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenModal,
   onOpenComplaint,
   onOpenChannel,
-  onOpenCloudAccess,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -28,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
     `Hello ${config.firmName} Team, I would like to connect with a Tax Consultant regarding compliance services.`
   );
 
-  const handleOpenFeatureModal = (feature: 'Login') => {
+  const handleOpenFeatureModal = (feature: 'Login' | 'Cloud Access') => {
     setIsMobileMenuOpen(false);
     onOpenModal(feature);
   };
@@ -41,11 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   const handleOpenChannel = () => {
     setIsMobileMenuOpen(false);
     onOpenChannel();
-  };
-
-  const handleOpenCloudAccess = () => {
-    setIsMobileMenuOpen(false);
-    onOpenCloudAccess();
   };
 
   return (
@@ -104,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="header-nav-cloud-access"
               type="button"
-              onClick={handleOpenCloudAccess}
+              onClick={() => handleOpenFeatureModal('Cloud Access')}
               className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
             >
               <Cloud className="w-3.5 h-3.5 text-[#20BA68]" />
@@ -194,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   id="mobile-nav-cloud-access"
                   type="button"
-                  onClick={handleOpenCloudAccess}
+                  onClick={() => handleOpenFeatureModal('Cloud Access')}
                   className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left"
                 >
                   <Cloud className="w-4 h-4 text-[#20BA68]" />

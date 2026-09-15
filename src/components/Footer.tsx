@@ -5,10 +5,9 @@ import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface FooterProps {
   config: AppConfig;
-  onOpenModal?: (feature: 'Login') => void;
+  onOpenModal?: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint?: () => void;
   onOpenChannel?: () => void;
-  onOpenCloudAccess?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -16,7 +15,6 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenModal,
   onOpenComplaint,
   onOpenChannel,
-  onOpenCloudAccess,
 }) => {
   const directWaUrl = buildWhatsAppUrl(
     config.whatsappNumber,
@@ -111,11 +109,10 @@ export const Footer: React.FC<FooterProps> = ({
                   <span>Channel</span>
                 </button>
               )}
-              {onOpenCloudAccess && (
+              {onOpenModal && (
                 <button
-                  id="footer-nav-cloud-access"
                   type="button"
-                  onClick={onOpenCloudAccess}
+                  onClick={() => onOpenModal('Cloud Access')}
                   className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
                 >
                   <Cloud className="w-3 h-3 text-[#20BA68]" />
