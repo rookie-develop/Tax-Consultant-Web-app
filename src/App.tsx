@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   FileText,
@@ -12,7 +12,7 @@ import {
   Clock,
   Search,
 } from 'lucide-react';
-import { AppConfig, ServiceCategory, SubService } from './types';
+import { AppConfig, ServiceCategory, SubService, ClientUser } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
 import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
@@ -22,8 +22,10 @@ import { SearchBar } from './components/SearchBar';
 import { ComingSoonModal } from './components/ComingSoonModal';
 import { ComplaintModal } from './components/ComplaintModal';
 import { ChannelModal } from './components/ChannelModal';
+import { LoginPage } from './components/LoginPage';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
+import { subscribeToAuthChanges, logoutFromFirebase } from './config/firebase';
 
 export default function App() {
   const config = DEFAULT_CONFIG;
@@ -35,26 +37,42 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isLoginPageOpen, setIsLoginPageOpen] = useState(false);
   const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | null>(null);
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+
+  // Authenticated Client Session - Firebase Auth
+  const [clientUser, setClientUser] = useState<ClientUser | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges((user) => {
+      setClientUser(user);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
 
   // Handlers
   const handleSelectCategory = (category: ServiceCategory) => {
+    setIsLoginPageOpen(false);
     setSelectedCategory(category);
     setSelectedSubService(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectSubService = (subService: SubService) => {
+    setIsLoginPageOpen(false);
     setSelectedSubService(subService);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectServiceFromSearch = (category: ServiceCategory, subService: SubService) => {
+    setIsLoginPageOpen(false);
     setSelectedCategory(category);
     setSelectedSubService(subService);
     setIsMobileSearchOpen(false);
@@ -62,6 +80,7 @@ export default function App() {
   };
 
   const handleGoToStep1 = () => {
+    setIsLoginPageOpen(false);
     setSelectedCategory(null);
     setSelectedSubService(null);
     setIsMobileSearchOpen(false);
@@ -69,8 +88,31 @@ export default function App() {
   };
 
   const handleGoToStep2 = () => {
+    setIsLoginPageOpen(false);
     setSelectedSubService(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenLogin = () => {
+    setIsLoginPageOpen(true);
+    setIsMobileSearchOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCloseLogin = () => {
+    setIsLoginPageOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLoginSuccess = (user: ClientUser) => {
+    setClientUser(user);
+    setIsLoginPageOpen(false);
+    handleGoToStep1();
+  };
+
+  const handleLogout = async () => {
+    await logoutFromFirebase();
+    setClientUser(null);
   };
 
   return (
@@ -79,34 +121,65 @@ export default function App() {
       <Header
         config={config}
         onReset={handleGoToStep1}
-        onOpenModal={(feat) => setModalFeature(feat)}
+        onOpenModal={(feat) => {
+          if (feat === 'Login') {
+            handleOpenLogin();
+          } else {
+            setModalFeature(feat);
+          }
+        }}
         onOpenComplaint={() => setIsComplaintModalOpen(true)}
         onOpenChannel={() => setIsChannelModalOpen(true)}
+        clientUser={clientUser}
+        onOpenLogin={handleOpenLogin}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8">
         {/* View Transitions */}
         <AnimatePresence mode="wait">
-          {/* STEP 1: Main Category Selection */}
-          {currentStep === 1 && (
-            <motion.div
-              key="step-1-categories"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-6 sm:space-y-8"
-            >
-              {/* Hero Title & Description */}
-              <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#0F201C] leading-tight">
-                  How can we help you today?
-                </h1>
-                <p className="text-sm sm:text-base text-[#5C6E6A] font-medium">
-                  Choose a service to get started.
-                </p>
-              </div>
+          {/* CLIENT LOGIN PAGE VIEW */}
+          {isLoginPageOpen ? (
+            <LoginPage
+              key="login-page-view"
+              config={config}
+              onBack={handleCloseLogin}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          ) : (
+            <>
+              {/* STEP 1: Main Category Selection */}
+              {currentStep === 1 && (
+                <motion.div
+                  key="step-1-categories"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="space-y-6 sm:space-y-8"
+                >
+                  {/* Hero Title & Description */}
+                  <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
+                    {/* Client Greeting when logged in */}
+                    {clientUser && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#20BA68]/15 border border-[#20BA68]/30 text-xs font-bold text-[#081E23] mb-1.5"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-[#20BA68]" />
+                        <span>Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}</span>
+                      </motion.div>
+                    )}
+
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#0F201C] leading-tight">
+                      How can we help you today?
+                    </h1>
+                    <p className="text-sm sm:text-base text-[#5C6E6A] font-medium">
+                      Choose a service to get started.
+                    </p>
+                  </div>
 
               {/* Desktop / Laptop / Large Screens Search Bar */}
               <div className="hidden md:block max-w-xl mx-auto w-full">
@@ -269,23 +342,25 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* STEP 3: WhatsApp Request Generation & Review */}
-          {currentStep === 3 && selectedCategory && selectedSubService && (
-            <motion.div
-              key="step-3-request"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
-            >
-              <WhatsAppRequestView
-                category={selectedCategory}
-                subService={selectedSubService}
-                config={config}
-                onBackToSubServices={handleGoToStep2}
-                onBackToCategories={handleGoToStep1}
-              />
-            </motion.div>
+              {/* STEP 3: WhatsApp Request Generation & Review */}
+              {currentStep === 3 && selectedCategory && selectedSubService && (
+                <motion.div
+                  key="step-3-request"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <WhatsAppRequestView
+                    category={selectedCategory}
+                    subService={selectedSubService}
+                    config={config}
+                    onBackToSubServices={handleGoToStep2}
+                    onBackToCategories={handleGoToStep1}
+                  />
+                </motion.div>
+              )}
+            </>
           )}
         </AnimatePresence>
       </main>
@@ -293,9 +368,17 @@ export default function App() {
       {/* Footer */}
       <Footer
         config={config}
-        onOpenModal={(feat) => setModalFeature(feat)}
+        onOpenModal={(feat) => {
+          if (feat === 'Login') {
+            handleOpenLogin();
+          } else {
+            setModalFeature(feat);
+          }
+        }}
         onOpenComplaint={() => setIsComplaintModalOpen(true)}
         onOpenChannel={() => setIsChannelModalOpen(true)}
+        clientUser={clientUser}
+        onOpenLogin={handleOpenLogin}
       />
 
       {/* Coming Soon Placeholder Modal for Login and Cloud Access */}

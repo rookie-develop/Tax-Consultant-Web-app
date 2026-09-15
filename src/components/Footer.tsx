@@ -1,6 +1,6 @@
 import React from 'react';
-import { ShieldCheck, MessageCircle, LogIn, Mail, Radio, Cloud } from 'lucide-react';
-import { AppConfig } from '../types';
+import { ShieldCheck, MessageCircle, LogIn, Mail, Radio, Cloud, User } from 'lucide-react';
+import { AppConfig, ClientUser } from '../types';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface FooterProps {
@@ -8,6 +8,8 @@ interface FooterProps {
   onOpenModal?: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint?: () => void;
   onOpenChannel?: () => void;
+  clientUser?: ClientUser | null;
+  onOpenLogin?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -15,6 +17,8 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenModal,
   onOpenComplaint,
   onOpenChannel,
+  clientUser,
+  onOpenLogin,
 }) => {
   const directWaUrl = buildWhatsAppUrl(
     config.whatsappNumber,
@@ -78,7 +82,21 @@ export const Footer: React.FC<FooterProps> = ({
 
             {/* Quick Links */}
             <div className="pt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-[#88A9A2]">
-              {onOpenModal && (
+              {clientUser ? (
+                <span className="text-[#20BA68] font-bold inline-flex items-center space-x-1">
+                  <User className="w-3 h-3 text-[#20BA68]" />
+                  <span>Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}</span>
+                </span>
+              ) : onOpenLogin ? (
+                <button
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <LogIn className="w-3 h-3 text-[#20BA68]" />
+                  <span>Login</span>
+                </button>
+              ) : onOpenModal && (
                 <button
                   type="button"
                   onClick={() => onOpenModal('Login')}

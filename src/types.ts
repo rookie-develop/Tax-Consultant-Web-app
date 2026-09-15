@@ -32,3 +32,10 @@ export interface AppConfig {
   emailContact: string;
   workingHours: string;
 }
+
+export interface ClientUser {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL?: string | null;
+}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, Clock, LogIn, Mail, Radio, Cloud } from 'lucide-react';
-import { AppConfig } from '../types';
+import { MessageCircle, Clock, LogIn, Mail, Radio, Cloud, User } from 'lucide-react';
+import { AppConfig, ClientUser } from '../types';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface HeaderProps {
@@ -10,6 +10,9 @@ interface HeaderProps {
   onOpenModal: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint: () => void;
   onOpenChannel: () => void;
+  clientUser?: ClientUser | null;
+  onOpenLogin: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +21,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenModal,
   onOpenComplaint,
   onOpenChannel,
+  clientUser,
+  onOpenLogin,
+  onLogout,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -104,15 +110,44 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Cloud Access</span>
             </button>
 
-            <button
-              id="header-nav-login"
-              type="button"
-              onClick={() => handleOpenFeatureModal('Login')}
-              className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
-            >
-              <LogIn className="w-3.5 h-3.5 text-[#20BA68]" />
-              <span>Login</span>
-            </button>
+            {clientUser ? (
+              <div className="flex items-center space-x-2 py-1 px-2.5 rounded-lg bg-white/10 text-white text-xs">
+                {clientUser.photoURL ? (
+                  <img
+                    src={clientUser.photoURL}
+                    alt={clientUser.displayName || 'Client'}
+                    referrerPolicy="no-referrer"
+                    className="w-4 h-4 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-[#20BA68]" />
+                )}
+                <span className="font-bold text-[#20BA68]">
+                  Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}
+                </span>
+                {onLogout && (
+                  <button
+                    id="header-nav-logout"
+                    type="button"
+                    onClick={onLogout}
+                    className="text-[10px] font-bold uppercase tracking-wider text-white/60 hover:text-white transition-colors cursor-pointer pl-1.5 border-l border-white/20"
+                    title="Logout"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                id="header-nav-login"
+                type="button"
+                onClick={onOpenLogin}
+                className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5 text-[#20BA68]" />
+                <span>Login</span>
+              </button>
+            )}
           </nav>
 
           {/* Direct WhatsApp Button */}
@@ -174,15 +209,51 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="px-4 py-3.5 space-y-2 text-xs font-semibold">
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  id="mobile-nav-login"
-                  type="button"
-                  onClick={() => handleOpenFeatureModal('Login')}
-                  className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left"
-                >
-                  <LogIn className="w-4 h-4 text-[#20BA68]" />
-                  <span>Login</span>
-                </button>
+                {clientUser ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/10 text-white min-h-[42px]">
+                    <div className="flex items-center space-x-1.5 min-w-0">
+                      {clientUser.photoURL ? (
+                        <img
+                          src={clientUser.photoURL}
+                          alt={clientUser.displayName || 'Client'}
+                          referrerPolicy="no-referrer"
+                          className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <User className="w-3.5 h-3.5 text-[#20BA68] shrink-0" />
+                      )}
+                      <span className="font-bold text-[#20BA68] text-[11px] truncate">
+                        Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}
+                      </span>
+                    </div>
+                    {onLogout && (
+                      <button
+                        id="mobile-nav-logout"
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onLogout();
+                        }}
+                        className="text-[10px] font-black uppercase text-white/70 hover:text-white px-1.5 py-0.5 rounded bg-white/10 transition-colors cursor-pointer shrink-0 ml-1"
+                      >
+                        Logout
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    id="mobile-nav-login"
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenLogin();
+                    }}
+                    className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left min-h-[42px]"
+                  >
+                    <LogIn className="w-4 h-4 text-[#20BA68]" />
+                    <span>Login</span>
+                  </button>
+                )}
 
                 <button
                   id="mobile-nav-cloud-access"
