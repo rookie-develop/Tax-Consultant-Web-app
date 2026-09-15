@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
-import { signInWithGooglePopup, getAuthErrorDetails, AuthErrorInfo } from '../config/firebase';
+import {
+  signInWithGooglePopup,
+  getAuthErrorDetails,
+  AuthErrorInfo,
+  getFirebaseEnvDiagnostics,
+} from '../config/firebase';
 
 interface LoginPageProps {
   config: AppConfig;
@@ -20,6 +25,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const envDiagnostics = getFirebaseEnvDiagnostics();
+
+  useEffect(() => {
+    console.log('[Firebase Environment Variables Diagnostic]');
+    envDiagnostics.forEach((item) => {
+      console.log(`  ${item.name}: ${item.status}`);
+    });
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -231,6 +244,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           >
             Cancel
           </button>
+        </div>
+
+        {/* Temporary Diagnostic: Environment Variables Status (Vercel / Production Check) */}
+        <div className="mt-5 pt-4 border-t border-[#E2DDD2] text-left">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10.5px] font-bold text-[#0F201C] uppercase tracking-wider">
+              Firebase Variables Check
+            </span>
+            <span className="text-[10px] text-[#5C6E6A] font-medium">Production Bundle</span>
+          </div>
+          <div className="space-y-1 bg-[#F8F6F0] rounded-xl p-2.5 border border-[#E2DDD2] font-mono text-[10.5px]">
+            {envDiagnostics.map((item) => (
+              <div key={item.name} className="flex items-center justify-between py-0.5">
+                <span className="text-[#3A4D39] truncate mr-2 font-medium">{item.name}:</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wide ${
+                    item.status === 'PRESENT'
+                      ? 'bg-[#20BA68]/15 text-[#147a43]'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {item.status}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

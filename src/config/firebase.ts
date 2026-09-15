@@ -21,6 +21,38 @@ export const getFirebaseConfig = () => ({
 
 export const firebaseConfig = getFirebaseConfig();
 
+export interface EnvDiagnosticItem {
+  name: string;
+  status: 'PRESENT' | 'MISSING';
+}
+
+export const getFirebaseEnvDiagnostics = (): EnvDiagnosticItem[] => [
+  {
+    name: 'VITE_FIREBASE_API_KEY',
+    status: Boolean(import.meta.env.VITE_FIREBASE_API_KEY) ? 'PRESENT' : 'MISSING',
+  },
+  {
+    name: 'VITE_FIREBASE_AUTH_DOMAIN',
+    status: Boolean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) ? 'PRESENT' : 'MISSING',
+  },
+  {
+    name: 'VITE_FIREBASE_PROJECT_ID',
+    status: Boolean(import.meta.env.VITE_FIREBASE_PROJECT_ID) ? 'PRESENT' : 'MISSING',
+  },
+  {
+    name: 'VITE_FIREBASE_STORAGE_BUCKET',
+    status: Boolean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) ? 'PRESENT' : 'MISSING',
+  },
+  {
+    name: 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+    status: Boolean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) ? 'PRESENT' : 'MISSING',
+  },
+  {
+    name: 'VITE_FIREBASE_APP_ID',
+    status: Boolean(import.meta.env.VITE_FIREBASE_APP_ID) ? 'PRESENT' : 'MISSING',
+  },
+];
+
 export const isFirebaseConfigured = (): boolean => {
   const config = getFirebaseConfig();
   return Boolean(config.apiKey && config.projectId);
