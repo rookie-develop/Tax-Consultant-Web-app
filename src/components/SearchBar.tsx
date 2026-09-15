@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { ServiceCategory, SubService } from '../types';
 
@@ -161,43 +162,51 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </div>
 
       {/* Results Dropdown */}
-      {isOpen && query.trim().length > 0 && (
-        <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl sm:rounded-2xl border-2 border-[#23A87B] shadow-xl z-30 max-h-[55vh] sm:max-h-80 overflow-y-auto p-1.5 sm:p-2 space-y-1 overscroll-contain">
-          {searchResults.length > 0 ? (
-            searchResults.map(({ category, subService }) => (
-              <button
-                key={`${category.id}-${subService.id}`}
-                type="button"
-                onClick={() => handleSelect(category, subService)}
-                className="w-full text-left p-2.5 sm:p-3 rounded-lg sm:rounded-xl hover:bg-[#F4F0E8] active:bg-[#ECE5D8] border border-transparent hover:border-[#E2DDD2] transition-all flex items-center justify-between gap-2.5 group cursor-pointer min-h-[48px] touch-manipulation"
-              >
-                <div className="min-w-0 flex-1 pr-1">
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5">
-                    <span className="text-[9px] sm:text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-[#23A87B]/15 text-[#14664B] shrink-0">
-                      {category.shortTitle}
-                    </span>
-                    <h5 className="text-xs sm:text-sm font-bold text-[#0F201C] group-hover:text-[#23A87B] truncate">
-                      {subService.title}
-                    </h5>
+      <AnimatePresence>
+        {isOpen && query.trim().length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.99 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute left-0 right-0 mt-2 bg-white rounded-xl sm:rounded-2xl border-2 border-[#23A87B] shadow-xl z-30 max-h-[55vh] sm:max-h-80 overflow-y-auto p-1.5 sm:p-2 space-y-1 overscroll-contain"
+          >
+            {searchResults.length > 0 ? (
+              searchResults.map(({ category, subService }) => (
+                <button
+                  key={`${category.id}-${subService.id}`}
+                  type="button"
+                  onClick={() => handleSelect(category, subService)}
+                  className="w-full text-left p-2.5 sm:p-3 rounded-lg sm:rounded-xl hover:bg-[#F4F0E8] active:bg-[#ECE5D8] border border-transparent hover:border-[#E2DDD2] transition-all flex items-center justify-between gap-2.5 group cursor-pointer min-h-[48px] touch-manipulation"
+                >
+                  <div className="min-w-0 flex-1 pr-1">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5">
+                      <span className="text-[9px] sm:text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-[#23A87B]/15 text-[#14664B] shrink-0">
+                        {category.shortTitle}
+                      </span>
+                      <h5 className="text-xs sm:text-sm font-bold text-[#0F201C] group-hover:text-[#23A87B] truncate">
+                        {subService.title}
+                      </h5>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-[#5C6E6A] line-clamp-1">
+                      {subService.shortDesc}
+                    </p>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-[#5C6E6A] line-clamp-1">
-                    {subService.shortDesc}
-                  </p>
-                </div>
 
-                <div className="shrink-0 flex items-center space-x-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#23A87B] group-hover:text-[#1E9E73]">
-                  <span className="hidden min-[380px]:inline">Select</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform stroke-[2.5]" />
-                </div>
-              </button>
-            ))
-          ) : (
-            <div className="p-4 text-center text-xs sm:text-sm text-[#5C6E6A] font-medium">
-              No matching service found for &ldquo;{query}&rdquo;.
-            </div>
-          )}
-        </div>
-      )}
+                  <div className="shrink-0 flex items-center space-x-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#23A87B] group-hover:text-[#1E9E73]">
+                    <span className="hidden min-[380px]:inline">Select</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform stroke-[2.5]" />
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="p-4 text-center text-xs sm:text-sm text-[#5C6E6A] font-medium">
+                No matching service found for &ldquo;{query}&rdquo;.
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

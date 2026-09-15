@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AppConfig, ServiceCategory, SubService } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
+import { ARSCA_CLOUD_FOLDER_URL } from './config/cloudConfig';
 import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
@@ -35,9 +36,19 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | null>(null);
+  const [modalFeature, setModalFeature] = useState<'Login' | null>(null);
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+
+  // Cloud Access: opens the configured ARSCA Google Drive folder in a new tab
+  const handleOpenCloudAccess = () => {
+    const url = ARSCA_CLOUD_FOLDER_URL.trim();
+    const targetUrl =
+      url && (url.startsWith('http://') || url.startsWith('https://'))
+        ? url
+        : 'https://drive.google.com';
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
@@ -82,6 +93,7 @@ export default function App() {
         onOpenModal={(feat) => setModalFeature(feat)}
         onOpenComplaint={() => setIsComplaintModalOpen(true)}
         onOpenChannel={() => setIsChannelModalOpen(true)}
+        onOpenCloudAccess={handleOpenCloudAccess}
       />
 
       {/* Main Container */}
@@ -296,9 +308,10 @@ export default function App() {
         onOpenModal={(feat) => setModalFeature(feat)}
         onOpenComplaint={() => setIsComplaintModalOpen(true)}
         onOpenChannel={() => setIsChannelModalOpen(true)}
+        onOpenCloudAccess={handleOpenCloudAccess}
       />
 
-      {/* Coming Soon Placeholder Modal for Login and Cloud Access */}
+      {/* Coming Soon Placeholder Modal for Login */}
       <ComingSoonModal
         isOpen={!!modalFeature}
         title={modalFeature || ''}

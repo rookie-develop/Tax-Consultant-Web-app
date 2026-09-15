@@ -5,9 +5,10 @@ import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface FooterProps {
   config: AppConfig;
-  onOpenModal?: (feature: 'Login' | 'Cloud Access') => void;
+  onOpenModal?: (feature: 'Login') => void;
   onOpenComplaint?: () => void;
   onOpenChannel?: () => void;
+  onOpenCloudAccess?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -15,6 +16,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenModal,
   onOpenComplaint,
   onOpenChannel,
+  onOpenCloudAccess,
 }) => {
   const directWaUrl = buildWhatsAppUrl(
     config.whatsappNumber,
@@ -22,7 +24,10 @@ export const Footer: React.FC<FooterProps> = ({
   );
 
   return (
-    <footer className="mt-10 sm:mt-16 bg-[#081E23] text-[#88A9A2] border-t border-[#0F2D33] text-xs">
+    <footer
+      id="app-footer"
+      className="hidden lg:block mt-10 sm:mt-16 bg-[#081E23] text-[#88A9A2] border-t border-[#0F2D33] text-xs"
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-[#0F2D33]">
           {/* Brand & Purpose */}
@@ -106,10 +111,11 @@ export const Footer: React.FC<FooterProps> = ({
                   <span>Channel</span>
                 </button>
               )}
-              {onOpenModal && (
+              {onOpenCloudAccess && (
                 <button
+                  id="footer-nav-cloud-access"
                   type="button"
-                  onClick={() => onOpenModal('Cloud Access')}
+                  onClick={onOpenCloudAccess}
                   className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
                 >
                   <Cloud className="w-3 h-3 text-[#20BA68]" />
