@@ -12,7 +12,7 @@ import {
   Clock,
   Search,
 } from 'lucide-react';
-import { AppConfig, ServiceCategory, SubService, ClientUser } from './types';
+import { AppConfig, ServiceCategory, SubService, ClientUser, ClientRecord } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
 import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
@@ -22,10 +22,11 @@ import { SearchBar } from './components/SearchBar';
 import { ComingSoonModal } from './components/ComingSoonModal';
 import { ComplaintModal } from './components/ComplaintModal';
 import { ChannelModal } from './components/ChannelModal';
+import { CloudAccessModal } from './components/CloudAccessModal';
 import { LoginPage } from './components/LoginPage';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
-import { subscribeToAuthChanges, logoutFromFirebase } from './config/firebase';
+import { subscribeToAuthChanges, logoutFromFirebase, getClientByUid } from './config/firebase';
 
 export default function App() {
   const config = DEFAULT_CONFIG;
@@ -42,12 +43,20 @@ export default function App() {
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
 
-  // Authenticated Client Session - Firebase Auth
+  // Authenticated Client Session - Firebase Auth & Firestore Client Record
   const [clientUser, setClientUser] = useState<ClientUser | null>(null);
+  const [clientRecord, setClientRecord] = useState<ClientRecord | null>(null);
+  const [cloudModalType, setCloudModalType] = useState<'unauthenticated' | 'not-found' | null>(null);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAuthChanges((user) => {
+    const unsubscribe = subscribeToAuthChanges(async (user) => {
       setClientUser(user);
+      if (user?.uid) {
+        const record = await getClientByUid(user.uid);
+        setClientRecord(record);
+      } else {
+        setClientRecord(null);
+      }
     });
     return () => {
       unsubscribe();
@@ -104,8 +113,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleLoginSuccess = (user: ClientUser) => {
+  const handleLoginSuccess = async (user: ClientUser) => {
     setClientUser(user);
+    if (user?.uid) {
+      const record = await getClientByUid(user.uid);
+      setClientRecord(record);
+    }
     setIsLoginPageOpen(false);
     handleGoToStep1();
   };
@@ -113,6 +126,39 @@ export default function App() {
   const handleLogout = async () => {
     await logoutFromFirebase();
     setClientUser(null);
+    setClientRecord(null);
+  };
+
+  const handleCloudAccess = async () => {
+    // 1. If not authenticated, prompt login
+    if (!clientUser) {
+      setCloudModalType('unauthenticated');
+      return;
+    }
+
+    // 2. Resolve client record if already loaded or fetch if pending
+    let record = clientRecord;
+    if (!record && clientUser.uid) {
+      try {
+        record = await getClientByUid(clientUser.uid);
+        if (record) {
+          setClientRecord(record);
+        }
+      } catch (err) {
+        console.error('Error fetching client record on cloud access:', err);
+      }
+    }
+
+    // 3. If no matching record or missing driveFolderId, show error modal
+    if (!record || !record.driveFolderId || !record.driveFolderId.trim()) {
+      setCloudModalType('not-found');
+      return;
+    }
+
+    // 4. Construct Drive URL from driveFolderId and open folder in new tab
+    const folderId = record.driveFolderId.trim();
+    const driveUrl = `https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`;
+    window.open(driveUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -124,6 +170,8 @@ export default function App() {
         onOpenModal={(feat) => {
           if (feat === 'Login') {
             handleOpenLogin();
+          } else if (feat === 'Cloud Access') {
+            handleCloudAccess();
           } else {
             setModalFeature(feat);
           }
@@ -371,6 +419,8 @@ export default function App() {
         onOpenModal={(feat) => {
           if (feat === 'Login') {
             handleOpenLogin();
+          } else if (feat === 'Cloud Access') {
+            handleCloudAccess();
           } else {
             setModalFeature(feat);
           }
@@ -381,7 +431,18 @@ export default function App() {
         onOpenLogin={handleOpenLogin}
       />
 
-      {/* Coming Soon Placeholder Modal for Login and Cloud Access */}
+      {/* Cloud Access Auth / Client Status Modal */}
+      <CloudAccessModal
+        isOpen={!!cloudModalType}
+        type={cloudModalType || 'unauthenticated'}
+        onClose={() => setCloudModalType(null)}
+        onLogin={() => {
+          setCloudModalType(null);
+          handleOpenLogin();
+        }}
+      />
+
+      {/* Coming Soon Placeholder Modal for other features */}
       <ComingSoonModal
         isOpen={!!modalFeature}
         title={modalFeature || ''}

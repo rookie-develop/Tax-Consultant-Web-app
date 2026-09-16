@@ -39,3 +39,11 @@ export interface ClientUser {
   email: string | null;
   photoURL?: string | null;
 }
+
+export interface ClientRecord {
+  id: string; // Document ID (e.g., 'ARSCA001')
+  name: string;
+  email: string;
+  uid: string;
+  driveFolderId: string;
+}

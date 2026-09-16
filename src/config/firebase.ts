@@ -8,7 +8,16 @@ import {
   User,
   Auth,
 } from 'firebase/auth';
-import { ClientUser } from '../types';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
+  Firestore,
+} from 'firebase/firestore';
+import { ClientUser, ClientRecord } from '../types';
 
 export const getFirebaseConfig = () => ({
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -84,6 +93,44 @@ export const getFirebaseAuth = (): Auth => {
     authInstance = getAuth(app);
   }
   return authInstance;
+};
+
+let firestoreInstance: Firestore | null = null;
+
+export const getFirebaseFirestore = (): Firestore => {
+  if (!firestoreInstance) {
+    const app = getFirebaseApp();
+    firestoreInstance = getFirestore(app);
+  }
+  return firestoreInstance;
+};
+
+export const getClientByUid = async (uid: string): Promise<ClientRecord | null> => {
+  if (!isFirebaseConfigured() || !uid) {
+    return null;
+  }
+  try {
+    const db = getFirebaseFirestore();
+    const clientsRef = collection(db, 'clients');
+    const q = query(clientsRef, where('uid', '==', uid), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const docSnap = querySnapshot.docs[0];
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: data.name || '',
+        email: data.email || '',
+        uid: data.uid || uid,
+        driveFolderId: data.driveFolderId || '',
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching client document by UID:', error);
+    return null;
+  }
 };
 
 export const googleProvider = new GoogleAuthProvider();
