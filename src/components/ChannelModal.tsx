@@ -7,7 +7,7 @@ interface ChannelModalProps {
   onClose: () => void;
 }
 
-export const ChannelModal: React.FC<ChannelModalProps> = ({
+export const ChannelModal: React.FC<ChannelModalProps> = React.memo(({
   isOpen,
   onClose,
 }) => {
@@ -41,7 +41,7 @@ export const ChannelModal: React.FC<ChannelModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#081E23]/60 backdrop-blur-xs cursor-pointer"
+            className="fixed inset-0 bg-[#081E23]/70 cursor-pointer"
             aria-hidden="true"
           />
 
@@ -109,4 +109,6 @@ export const ChannelModal: React.FC<ChannelModalProps> = ({
       )}
     </AnimatePresence>
   );
-};
+});
+
+ChannelModal.displayName = 'ChannelModal';

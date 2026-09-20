@@ -8,15 +8,7 @@ import {
   User,
   Auth,
 } from 'firebase/auth';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  limit,
-  Firestore,
-} from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 import { ClientUser, ClientRecord } from '../types';
 
 export const getFirebaseConfig = () => ({
@@ -97,8 +89,12 @@ export const getFirebaseAuth = (): Auth => {
 
 let firestoreInstance: Firestore | null = null;
 
-export const getFirebaseFirestore = (): Firestore => {
+// In-memory cache to eliminate duplicate Firestore reads for the same authenticated client
+const clientRecordCache = new Map<string, ClientRecord | null>();
+
+export const getFirebaseFirestore = async (): Promise<Firestore> => {
   if (!firestoreInstance) {
+    const { getFirestore } = await import('firebase/firestore');
     const app = getFirebaseApp();
     firestoreInstance = getFirestore(app);
   }
@@ -109,8 +105,13 @@ export const getClientByUid = async (uid: string): Promise<ClientRecord | null> 
   if (!isFirebaseConfigured() || !uid) {
     return null;
   }
+  // Check memory cache first to prevent redundant network queries
+  if (clientRecordCache.has(uid)) {
+    return clientRecordCache.get(uid) || null;
+  }
   try {
-    const db = getFirebaseFirestore();
+    const { collection, query, where, getDocs, limit } = await import('firebase/firestore');
+    const db = await getFirebaseFirestore();
     const clientsRef = collection(db, 'clients');
     const q = query(clientsRef, where('uid', '==', uid), limit(1));
     const querySnapshot = await getDocs(q);
@@ -118,14 +119,17 @@ export const getClientByUid = async (uid: string): Promise<ClientRecord | null> 
     if (!querySnapshot.empty) {
       const docSnap = querySnapshot.docs[0];
       const data = docSnap.data();
-      return {
+      const record: ClientRecord = {
         id: docSnap.id,
         name: data.name || '',
         email: data.email || '',
         uid: data.uid || uid,
         driveFolderId: data.driveFolderId || '',
       };
+      clientRecordCache.set(uid, record);
+      return record;
     }
+    clientRecordCache.set(uid, null);
     return null;
   } catch (error) {
     console.error('Error fetching client document by UID:', error);
@@ -157,6 +161,7 @@ export const signInWithGooglePopup = async (): Promise<ClientUser> => {
 };
 
 export const logoutFromFirebase = async (): Promise<void> => {
+  clientRecordCache.clear();
   if (!isFirebaseConfigured()) {
     return;
   }

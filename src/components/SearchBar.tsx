@@ -12,7 +12,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   categories,
   onSelectService,
   placeholder = 'Search for a service...',
@@ -40,7 +40,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
@@ -209,4 +209,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
+
+SearchBar.displayName = 'SearchBar';

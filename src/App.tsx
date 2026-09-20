@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   FileText,
@@ -17,16 +17,44 @@ import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
 import { Header } from './components/Header';
 import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
-import { WhatsAppRequestView } from './components/WhatsAppRequestView';
 import { SearchBar } from './components/SearchBar';
-import { ComingSoonModal } from './components/ComingSoonModal';
-import { ComplaintModal } from './components/ComplaintModal';
-import { ChannelModal } from './components/ChannelModal';
-import { CloudAccessModal } from './components/CloudAccessModal';
-import { LoginPage } from './components/LoginPage';
 import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
 import { subscribeToAuthChanges, logoutFromFirebase, getClientByUid } from './config/firebase';
+
+// Lazy load secondary views & modals to keep initial bundle lightweight on mobile
+const WhatsAppRequestView = lazy(() =>
+  import('./components/WhatsAppRequestView').then((m) => ({ default: m.WhatsAppRequestView }))
+);
+const LoginPage = lazy(() =>
+  import('./components/LoginPage').then((m) => ({ default: m.LoginPage }))
+);
+const CloudAccessModal = lazy(() =>
+  import('./components/CloudAccessModal').then((m) => ({ default: m.CloudAccessModal }))
+);
+const ComingSoonModal = lazy(() =>
+  import('./components/ComingSoonModal').then((m) => ({ default: m.ComingSoonModal }))
+);
+const ComplaintModal = lazy(() =>
+  import('./components/ComplaintModal').then((m) => ({ default: m.ComplaintModal }))
+);
+const ChannelModal = lazy(() =>
+  import('./components/ChannelModal').then((m) => ({ default: m.ChannelModal }))
+);
+
+// High-performance scroll to top helper
+const scrollToTop = () => {
+  try {
+    const isMobile = window.innerWidth < 640;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({
+      top: 0,
+      behavior: isMobile || prefersReducedMotion ? 'auto' : 'smooth',
+    });
+  } catch {
+    window.scrollTo(0, 0);
+  }
+};
 
 export default function App() {
   const config = DEFAULT_CONFIG;
@@ -66,54 +94,57 @@ export default function App() {
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
 
-  // Handlers
-  const handleSelectCategory = (category: ServiceCategory) => {
+  // Handlers with useCallback to prevent unnecessary re-renders of memoized components
+  const handleSelectCategory = useCallback((category: ServiceCategory) => {
     setIsLoginPageOpen(false);
     setSelectedCategory(category);
     setSelectedSubService(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleSelectSubService = (subService: SubService) => {
+  const handleSelectSubService = useCallback((subService: SubService) => {
     setIsLoginPageOpen(false);
     setSelectedSubService(subService);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleSelectServiceFromSearch = (category: ServiceCategory, subService: SubService) => {
-    setIsLoginPageOpen(false);
-    setSelectedCategory(category);
-    setSelectedSubService(subService);
-    setIsMobileSearchOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handleSelectServiceFromSearch = useCallback(
+    (category: ServiceCategory, subService: SubService) => {
+      setIsLoginPageOpen(false);
+      setSelectedCategory(category);
+      setSelectedSubService(subService);
+      setIsMobileSearchOpen(false);
+      scrollToTop();
+    },
+    []
+  );
 
-  const handleGoToStep1 = () => {
+  const handleGoToStep1 = useCallback(() => {
     setIsLoginPageOpen(false);
     setSelectedCategory(null);
     setSelectedSubService(null);
     setIsMobileSearchOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleGoToStep2 = () => {
+  const handleGoToStep2 = useCallback(() => {
     setIsLoginPageOpen(false);
     setSelectedSubService(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleOpenLogin = () => {
+  const handleOpenLogin = useCallback(() => {
     setIsLoginPageOpen(true);
     setIsMobileSearchOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleCloseLogin = () => {
+  const handleCloseLogin = useCallback(() => {
     setIsLoginPageOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollToTop();
+  }, []);
 
-  const handleLoginSuccess = async (user: ClientUser) => {
+  const handleLoginSuccess = useCallback(async (user: ClientUser) => {
     setClientUser(user);
     if (user?.uid) {
       const record = await getClientByUid(user.uid);
@@ -121,15 +152,15 @@ export default function App() {
     }
     setIsLoginPageOpen(false);
     handleGoToStep1();
-  };
+  }, [handleGoToStep1]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logoutFromFirebase();
     setClientUser(null);
     setClientRecord(null);
-  };
+  }, []);
 
-  const handleCloudAccess = async () => {
+  const handleCloudAccess = useCallback(async () => {
     // 1. If not authenticated, prompt login
     if (!clientUser) {
       setCloudModalType('unauthenticated');
@@ -159,7 +190,20 @@ export default function App() {
     const folderId = record.driveFolderId.trim();
     const driveUrl = `https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`;
     window.open(driveUrl, '_blank', 'noopener,noreferrer');
-  };
+  }, [clientUser, clientRecord]);
+
+  const handleOpenModalFeature = useCallback((feat: 'Login' | 'Cloud Access') => {
+    if (feat === 'Login') {
+      handleOpenLogin();
+    } else if (feat === 'Cloud Access') {
+      handleCloudAccess();
+    } else {
+      setModalFeature(feat);
+    }
+  }, [handleOpenLogin, handleCloudAccess]);
+
+  const handleOpenComplaint = useCallback(() => setIsComplaintModalOpen(true), []);
+  const handleOpenChannel = useCallback(() => setIsChannelModalOpen(true), []);
 
   return (
     <div className="min-h-screen bg-[#F4F0E8] text-[#0F201C] flex flex-col font-sans selection:bg-[#23A87B]/25 selection:text-[#081E23]">
@@ -167,17 +211,9 @@ export default function App() {
       <Header
         config={config}
         onReset={handleGoToStep1}
-        onOpenModal={(feat) => {
-          if (feat === 'Login') {
-            handleOpenLogin();
-          } else if (feat === 'Cloud Access') {
-            handleCloudAccess();
-          } else {
-            setModalFeature(feat);
-          }
-        }}
-        onOpenComplaint={() => setIsComplaintModalOpen(true)}
-        onOpenChannel={() => setIsChannelModalOpen(true)}
+        onOpenModal={handleOpenModalFeature}
+        onOpenComplaint={handleOpenComplaint}
+        onOpenChannel={handleOpenChannel}
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
         onLogout={handleLogout}
@@ -189,12 +225,20 @@ export default function App() {
         <AnimatePresence mode="wait">
           {/* CLIENT LOGIN PAGE VIEW */}
           {isLoginPageOpen ? (
-            <LoginPage
-              key="login-page-view"
-              config={config}
-              onBack={handleCloseLogin}
-              onLoginSuccess={handleLoginSuccess}
-            />
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <LoginPage
+                key="login-page-view"
+                config={config}
+                onBack={handleCloseLogin}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            </Suspense>
           ) : (
             <>
               {/* STEP 1: Main Category Selection */}
@@ -399,13 +443,21 @@ export default function App() {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <WhatsAppRequestView
-                    category={selectedCategory}
-                    subService={selectedSubService}
-                    config={config}
-                    onBackToSubServices={handleGoToStep2}
-                    onBackToCategories={handleGoToStep1}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="py-16 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                      </div>
+                    }
+                  >
+                    <WhatsAppRequestView
+                      category={selectedCategory}
+                      subService={selectedSubService}
+                      config={config}
+                      onBackToSubServices={handleGoToStep2}
+                      onBackToCategories={handleGoToStep1}
+                    />
+                  </Suspense>
                 </motion.div>
               )}
             </>
@@ -416,50 +468,50 @@ export default function App() {
       {/* Footer */}
       <Footer
         config={config}
-        onOpenModal={(feat) => {
-          if (feat === 'Login') {
-            handleOpenLogin();
-          } else if (feat === 'Cloud Access') {
-            handleCloudAccess();
-          } else {
-            setModalFeature(feat);
-          }
-        }}
-        onOpenComplaint={() => setIsComplaintModalOpen(true)}
-        onOpenChannel={() => setIsChannelModalOpen(true)}
+        onOpenModal={handleOpenModalFeature}
+        onOpenComplaint={handleOpenComplaint}
+        onOpenChannel={handleOpenChannel}
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
       />
 
       {/* Cloud Access Auth / Client Status Modal */}
-      <CloudAccessModal
-        isOpen={!!cloudModalType}
-        type={cloudModalType || 'unauthenticated'}
-        onClose={() => setCloudModalType(null)}
-        onLogin={() => {
-          setCloudModalType(null);
-          handleOpenLogin();
-        }}
-      />
+      <Suspense fallback={null}>
+        <CloudAccessModal
+          isOpen={!!cloudModalType}
+          type={cloudModalType || 'unauthenticated'}
+          onClose={() => setCloudModalType(null)}
+          onLogin={() => {
+            setCloudModalType(null);
+            handleOpenLogin();
+          }}
+        />
+      </Suspense>
 
       {/* Coming Soon Placeholder Modal for other features */}
-      <ComingSoonModal
-        isOpen={!!modalFeature}
-        title={modalFeature || ''}
-        onClose={() => setModalFeature(null)}
-      />
+      <Suspense fallback={null}>
+        <ComingSoonModal
+          isOpen={!!modalFeature}
+          title={modalFeature || ''}
+          onClose={() => setModalFeature(null)}
+        />
+      </Suspense>
 
       {/* Complaint Confirmation Modal */}
-      <ComplaintModal
-        isOpen={isComplaintModalOpen}
-        onClose={() => setIsComplaintModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <ComplaintModal
+          isOpen={isComplaintModalOpen}
+          onClose={() => setIsComplaintModalOpen(false)}
+        />
+      </Suspense>
 
       {/* Channel Confirmation Modal */}
-      <ChannelModal
-        isOpen={isChannelModalOpen}
-        onClose={() => setIsChannelModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <ChannelModal
+          isOpen={isChannelModalOpen}
+          onClose={() => setIsChannelModalOpen(false)}
+        />
+      </Suspense>
     </div>
   );
 }

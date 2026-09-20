@@ -35,7 +35,7 @@ const iconMap = {
   ReceiptIndianRupee,
 };
 
-export const CategoryCard: React.FC<CategoryCardProps> = ({
+export const CategoryCard: React.FC<CategoryCardProps> = React.memo(({
   category,
   isSelected,
   onSelect,
@@ -90,6 +90,8 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       </div>
     </button>
   );
-};
+});
+
+CategoryCard.displayName = 'CategoryCard';
 
 

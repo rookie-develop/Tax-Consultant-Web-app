@@ -15,7 +15,7 @@ interface LoginPageProps {
   onLoginSuccess: (user: ClientUser) => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({
+export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   config,
   onBack,
   onLoginSuccess,
@@ -25,14 +25,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const envDiagnostics = getFirebaseEnvDiagnostics();
+  const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
 
   useEffect(() => {
     console.log('[Firebase Environment Variables Diagnostic]');
     envDiagnostics.forEach((item) => {
       console.log(`  ${item.name}: ${item.status}`);
     });
-  }, []);
+  }, [envDiagnostics]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -330,4 +330,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       </AnimatePresence>
     </motion.div>
   );
-};
+});
+
+LoginPage.displayName = 'LoginPage';

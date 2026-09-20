@@ -20,7 +20,7 @@ interface WhatsAppRequestViewProps {
   onBackToCategories: () => void;
 }
 
-export const WhatsAppRequestView: React.FC<WhatsAppRequestViewProps> = ({
+export const WhatsAppRequestView: React.FC<WhatsAppRequestViewProps> = React.memo(({
   category,
   subService,
   config,
@@ -38,21 +38,30 @@ export const WhatsAppRequestView: React.FC<WhatsAppRequestViewProps> = ({
       }
     };
 
-    window.addEventListener('focus', handleReturn);
-    document.addEventListener('visibilitychange', () => {
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && waitingForReturnRef.current) {
         setRequestInitiated(true);
       }
-    });
+    };
+
+    window.addEventListener('focus', handleReturn);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', handleReturn);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  // Generate the exact service-specific message
-  const generatedMessage = generateWhatsAppMessage(category, subService, config);
-  const whatsappUrl = buildWhatsAppUrl(config.whatsappNumber, generatedMessage);
+  // Generate the exact service-specific message (memoized)
+  const generatedMessage = React.useMemo(
+    () => generateWhatsAppMessage(category, subService, config),
+    [category, subService, config]
+  );
+  const whatsappUrl = React.useMemo(
+    () => buildWhatsAppUrl(config.whatsappNumber, generatedMessage),
+    [config.whatsappNumber, generatedMessage]
+  );
 
   const handleCopyMessage = async () => {
     try {
@@ -238,6 +247,8 @@ export const WhatsAppRequestView: React.FC<WhatsAppRequestViewProps> = ({
       </div>
     </div>
   );
-};
+});
+
+WhatsAppRequestView.displayName = 'WhatsAppRequestView';
 
 

@@ -15,7 +15,7 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header: React.FC<HeaderProps> = React.memo(({
   config,
   onReset,
   onOpenModal,
@@ -27,9 +27,13 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const directWaUrl = buildWhatsAppUrl(
-    config.whatsappNumber,
-    `Hello ${config.firmName} Team, I would like to connect with a Tax Consultant regarding compliance services.`
+  const directWaUrl = React.useMemo(
+    () =>
+      buildWhatsAppUrl(
+        config.whatsappNumber,
+        `Hello ${config.firmName} Team, I would like to connect with a Tax Consultant regarding compliance services.`
+      ),
+    [config.whatsappNumber, config.firmName]
   );
 
   const handleOpenFeatureModal = (feature: 'Login' | 'Cloud Access') => {
@@ -308,4 +312,6 @@ export const Header: React.FC<HeaderProps> = ({
       </AnimatePresence>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';

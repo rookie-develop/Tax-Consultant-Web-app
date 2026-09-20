@@ -12,7 +12,7 @@ interface FooterProps {
   onOpenLogin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({
+export const Footer: React.FC<FooterProps> = React.memo(({
   config,
   onOpenModal,
   onOpenComplaint,
@@ -20,9 +20,13 @@ export const Footer: React.FC<FooterProps> = ({
   clientUser,
   onOpenLogin,
 }) => {
-  const directWaUrl = buildWhatsAppUrl(
-    config.whatsappNumber,
-    `Hello ${config.firmName} Tax Team, I have an inquiry regarding tax consultation and filing services.`
+  const directWaUrl = React.useMemo(
+    () =>
+      buildWhatsAppUrl(
+        config.whatsappNumber,
+        `Hello ${config.firmName} Tax Team, I have an inquiry regarding tax consultation and filing services.`
+      ),
+    [config.whatsappNumber, config.firmName]
   );
 
   return (
@@ -149,4 +153,6 @@ export const Footer: React.FC<FooterProps> = ({
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = 'Footer';

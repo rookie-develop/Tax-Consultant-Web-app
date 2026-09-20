@@ -7,7 +7,7 @@ interface ComplaintModalProps {
   onClose: () => void;
 }
 
-export const ComplaintModal: React.FC<ComplaintModalProps> = ({
+export const ComplaintModal: React.FC<ComplaintModalProps> = React.memo(({
   isOpen,
   onClose,
 }) => {
@@ -41,7 +41,7 @@ export const ComplaintModal: React.FC<ComplaintModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#081E23]/60 backdrop-blur-xs cursor-pointer"
+            className="fixed inset-0 bg-[#081E23]/70 cursor-pointer"
             aria-hidden="true"
           />
 
@@ -120,4 +120,6 @@ export const ComplaintModal: React.FC<ComplaintModalProps> = ({
       )}
     </AnimatePresence>
   );
-};
+});
+
+ComplaintModal.displayName = 'ComplaintModal';

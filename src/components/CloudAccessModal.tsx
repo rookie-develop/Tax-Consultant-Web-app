@@ -9,7 +9,7 @@ interface CloudAccessModalProps {
   onLogin: () => void;
 }
 
-export const CloudAccessModal: React.FC<CloudAccessModalProps> = ({
+export const CloudAccessModal: React.FC<CloudAccessModalProps> = React.memo(({
   isOpen,
   type,
   onClose,
@@ -39,7 +39,7 @@ export const CloudAccessModal: React.FC<CloudAccessModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#081E23]/60 backdrop-blur-xs cursor-pointer"
+            className="fixed inset-0 bg-[#081E23]/70 cursor-pointer"
             aria-hidden="true"
           />
           <motion.div
@@ -116,4 +116,6 @@ export const CloudAccessModal: React.FC<CloudAccessModalProps> = ({
       )}
     </AnimatePresence>
   );
-};
+});
+
+CloudAccessModal.displayName = 'CloudAccessModal';

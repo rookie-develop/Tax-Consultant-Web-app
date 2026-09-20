@@ -8,7 +8,7 @@ interface SubServiceCardProps {
   onSelect: (subService: SubService) => void;
 }
 
-export const SubServiceCard: React.FC<SubServiceCardProps> = ({
+export const SubServiceCard: React.FC<SubServiceCardProps> = React.memo(({
   subService,
   isSelected,
   onSelect,
@@ -47,6 +47,8 @@ export const SubServiceCard: React.FC<SubServiceCardProps> = ({
       </button>
     </div>
   );
-};
+});
+
+SubServiceCard.displayName = 'SubServiceCard';
 
 
