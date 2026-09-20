@@ -3,8 +3,8 @@ import { AppConfig, ServiceCategory } from '../types';
 export const DEFAULT_CONFIG: AppConfig = {
   firmName: 'ARSCA',
   firmSubtitle: 'Tax Consultant & Compliance Advisory',
-  whatsappNumber: '918591446647', // Dedicated ARSCA Consultant WhatsApp: +91 8591446647
-  displayPhone: '+91 85914 46647',
+  whatsappNumber: '919284355124', // Dedicated ARSCA Consultant WhatsApp: +91 92843 55124
+  displayPhone: '+91 92843 55124',
   emailContact: 'compliance@arsca.in',
   workingHours: 'Mon – Sat: 9:30 AM – 7:00 PM',
 };
