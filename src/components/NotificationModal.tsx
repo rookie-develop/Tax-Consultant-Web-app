@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, X, CheckCircle2, Calendar, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Bell, X, CheckCircle2, Calendar, ShieldCheck } from 'lucide-react';
 
 interface NotificationModalProps {
   isOpen: boolean;

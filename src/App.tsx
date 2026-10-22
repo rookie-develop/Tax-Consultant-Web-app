@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  FileText,
-  ArrowLeft,
-  MessageCircle,
-  ShieldCheck,
-  CheckCircle2,
+  ShieldAlert,
+  ArrowRight,
   Sparkles,
   HelpCircle,
-  ChevronRight,
+  FileCheck2,
+  Calendar,
+  CheckCircle,
   Clock,
-  Search,
-  Users,
+  ExternalLink,
+  ChevronRight,
+  TrendingUp,
   X,
 } from 'lucide-react';
 import { AppConfig, ServiceCategory, SubService, ClientUser, ClientRecord } from './types';
@@ -21,8 +21,11 @@ import { CategoryCard } from './components/CategoryCard';
 import { SubServiceCard } from './components/SubServiceCard';
 import { SearchBar } from './components/SearchBar';
 import { Footer } from './components/Footer';
-import { buildWhatsAppUrl } from './utils/whatsapp';
-import { subscribeToAuthChanges, logoutFromFirebase, getClientByUid } from './config/firebase';
+import {
+  subscribeToAuthChanges,
+  logoutFromFirebase,
+  getClientByUid,
+} from './config/firebase';
 
 import { BottomNav, BottomNavTab } from './components/BottomNav';
 
@@ -208,45 +211,42 @@ export default function App() {
       setClientRecord(record);
     }
     setIsLoginPageOpen(false);
-    handleGoToStep1();
-  }, [handleGoToStep1]);
+    if (window.location.hash === '#login') {
+      window.history.back();
+    }
+    scrollToTop();
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await logoutFromFirebase();
     setClientUser(null);
     setClientRecord(null);
+    setCloudModalType(null);
   }, []);
 
   const handleCloudAccess = useCallback(async () => {
-    // 1. If not authenticated, prompt login
     if (!clientUser) {
       setCloudModalType('unauthenticated');
       return;
     }
 
-    // 2. Resolve client record if already loaded or fetch if pending
-    let record = clientRecord;
-    if (!record && clientUser.uid) {
-      try {
-        record = await getClientByUid(clientUser.uid);
-        if (record) {
-          setClientRecord(record);
-        }
-      } catch (err) {
-        console.error('Error fetching client record on cloud access:', err);
+    let activeRecord = clientRecord;
+    if (!activeRecord && clientUser.uid) {
+      activeRecord = await getClientByUid(clientUser.uid);
+      setClientRecord(activeRecord);
+    }
+
+    if (activeRecord && activeRecord.driveFolderId && activeRecord.driveFolderId.trim() !== '') {
+      const driveUrl = `https://drive.google.com/drive/folders/${encodeURIComponent(
+        activeRecord.driveFolderId.trim()
+      )}`;
+      const newTab = window.open(driveUrl, '_blank', 'noopener,noreferrer');
+      if (!newTab) {
+        window.location.href = driveUrl;
       }
-    }
-
-    // 3. If no matching record or missing driveFolderId, show error modal
-    if (!record || !record.driveFolderId || !record.driveFolderId.trim()) {
+    } else {
       setCloudModalType('not-found');
-      return;
     }
-
-    // 4. Construct Drive URL from driveFolderId and open folder in new tab
-    const folderId = record.driveFolderId.trim();
-    const driveUrl = `https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`;
-    window.open(driveUrl, '_blank', 'noopener,noreferrer');
   }, [clientUser, clientRecord]);
 
   const handleOpenModalFeature = useCallback((feat: 'Login' | 'Cloud Access') => {
@@ -289,6 +289,14 @@ export default function App() {
     setIsChannelsPageOpen(true);
     if (window.location.hash !== '#channels') {
       window.history.pushState({ page: 'channels' }, '', '#channels');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleBackFromChannels = useCallback(() => {
+    setIsChannelsPageOpen(false);
+    if (window.location.hash === '#channels') {
+      window.history.back();
     }
     scrollToTop();
   }, []);
@@ -458,89 +466,56 @@ export default function App() {
                     <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
                       SERVICES
                     </h2>
-                    <span className="text-[11px] text-[#5C6E6A] font-medium hidden sm:inline">
-                      Tap a service category to explore filings & advisory
-                    </span>
                   </div>
 
-                  {/* 3-Column Service Grid on mobile, 4-column on tablet/desktop */}
-                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-3.5 md:gap-4.5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
                     {SERVICE_CATEGORIES.map((category) => (
                       <CategoryCard
                         key={category.id}
                         category={category}
-                        isSelected={selectedCategory?.id === category.id}
-                        onSelect={handleSelectCategory}
+                        onClick={handleSelectCategory}
                       />
                     ))}
                   </div>
                 </motion.div>
               )}
 
-          {/* STEP 2: Sub-Services for Selected Category */}
-          {currentStep === 2 && selectedCategory && (
-            <motion.div
-              key="step-2-subservices"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-5 sm:space-y-6"
-            >
-              {/* Top Bar with Category Context */}
-              <div className="bg-white rounded-2xl border border-[#E2DDD2] p-4 sm:p-5 md:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.03)] space-y-3 sm:space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2.5">
-                  <button
-                    id="btn-back-to-categories"
-                    type="button"
-                    onClick={handleGoToStep1}
-                    className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0F201C] hover:text-[#23A87B] bg-[#ECE5D8] hover:bg-[#E2DDD2] active:bg-[#D5CEBF] px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B]"
-                  >
-                    <ArrowLeft className="w-4 h-4 shrink-0" />
-                    <span>All Categories</span>
-                  </button>
+              {/* STEP 2: Sub-services in Selected Category */}
+              {currentStep === 2 && selectedCategory && (
+                <motion.div
+                  key="step-2-subservices"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleGoToStep1}
+                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#23A87B] hover:text-[#081E23] transition-colors cursor-pointer bg-white border border-[#E2DDD2] px-3 py-1.5 rounded-lg shadow-xs"
+                    >
+                      <span>← Back to Services</span>
+                    </button>
+                    <span className="text-xs font-bold text-[#5C6E6A]">
+                      {selectedCategory.title}
+                    </span>
+                  </div>
 
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#23A87B]/15 text-[#14664B] border border-[#23A87B]/30 shrink-0">
-                    Step 2: Choose Exact Service
-                  </span>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {selectedCategory.subServices.map((sub) => (
+                      <SubServiceCard
+                        key={sub.id}
+                        subService={sub}
+                        onClick={handleSelectSubService}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-                <div className="border-t border-[#E2DDD2] pt-3 sm:pt-4">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0F201C] tracking-tight mb-1 break-words">
-                    {selectedCategory.title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-[#5C6E6A] font-medium break-words">
-                    {selectedCategory.tagline}
-                  </p>
-                </div>
-              </div>
-
-              {/* Sub-Services Grid */}
-              <div>
-                <div className="flex flex-col min-[480px]:flex-row min-[480px]:items-center justify-between gap-1 mb-3 sm:mb-4">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
-                    CATEGORIES
-                  </h3>
-                  <span className="text-[11px] sm:text-xs text-[#5C6E6A] font-medium">
-                    Select a service to generate WhatsApp request
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5">
-                  {selectedCategory.subServices.map((subService) => (
-                    <SubServiceCard
-                      key={subService.id}
-                      subService={subService}
-                      isSelected={selectedSubService?.id === subService.id}
-                      onSelect={handleSelectSubService}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-              {/* STEP 3: WhatsApp Request Generation & Review */}
+              {/* STEP 3: WhatsApp Request Generator for Selected Sub-service */}
               {currentStep === 3 && selectedCategory && selectedSubService && (
                 <motion.div
                   key="step-3-request"
@@ -548,10 +523,24 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
+                  className="space-y-4"
                 >
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleGoToStep2}
+                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#23A87B] hover:text-[#081E23] transition-colors cursor-pointer bg-white border border-[#E2DDD2] px-3 py-1.5 rounded-lg shadow-xs"
+                    >
+                      <span>← Back to {selectedCategory.title}</span>
+                    </button>
+                    <span className="text-xs font-bold text-[#5C6E6A] truncate max-w-[200px]">
+                      {selectedSubService.title}
+                    </span>
+                  </div>
+
                   <Suspense
                     fallback={
-                      <div className="py-16 flex items-center justify-center">
+                      <div className="py-12 flex items-center justify-center">
                         <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
                       </div>
                     }
@@ -560,8 +549,6 @@ export default function App() {
                       category={selectedCategory}
                       subService={selectedSubService}
                       config={config}
-                      onBackToSubServices={handleGoToStep2}
-                      onBackToCategories={handleGoToStep1}
                     />
                   </Suspense>
                 </motion.div>
@@ -571,27 +558,25 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Footer */}
+      {/* Desktop Footer */}
       <Footer
         config={config}
+        onReset={handleGoToStep1}
         onOpenModal={handleOpenModalFeature}
         onOpenComplaint={handleOpenComplaint}
         onOpenChannels={handleOpenChannels}
-        clientUser={clientUser}
-        onOpenLogin={handleOpenLogin}
       />
 
-      {/* Cloud Access Auth / Client Status Modal */}
+      {/* Cloud Access Authentication/Link Modals */}
       <Suspense fallback={null}>
-        <CloudAccessModal
-          isOpen={!!cloudModalType}
-          type={cloudModalType || 'unauthenticated'}
-          onClose={() => setCloudModalType(null)}
-          onLogin={() => {
-            setCloudModalType(null);
-            handleOpenLogin();
-          }}
-        />
+        {cloudModalType && (
+          <CloudAccessModal
+            isOpen={cloudModalType !== null}
+            type={cloudModalType}
+            onClose={() => setCloudModalType(null)}
+            onLogin={handleOpenLogin}
+          />
+        )}
       </Suspense>
 
       {/* Improved Coming Soon Modal for Channels, Community & Secondary Features */}
@@ -628,4 +613,3 @@ export default function App() {
     </div>
   );
 }
-

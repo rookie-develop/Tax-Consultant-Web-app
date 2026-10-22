@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, Bell } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import {
   signInWithGooglePopup,
   getAuthErrorDetails,
   AuthErrorInfo,
   getFirebaseEnvDiagnostics,
+  requestPushNotificationToken,
+  PushRegistrationResult,
 } from '../config/firebase';
 
 interface LoginPageProps {
@@ -25,7 +27,34 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [pushStatus, setPushStatus] = useState<{
+    loading: boolean;
+    result: PushRegistrationResult | null;
+  }>({
+    loading: false,
+    result: null,
+  });
+  const [copiedToken, setCopiedToken] = useState(false);
   const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
+
+  const handleEnablePushNotifications = async () => {
+    setPushStatus({ loading: true, result: null });
+    setCopiedToken(false);
+    const res = await requestPushNotificationToken();
+    setPushStatus({ loading: false, result: res });
+  };
+
+  const handleCopyToken = async (tokenToCopy: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(tokenToCopy);
+      }
+      setCopiedToken(true);
+      setTimeout(() => setCopiedToken(false), 2500);
+    } catch (err) {
+      console.warn('Failed to copy token:', err);
+    }
+  };
 
   useEffect(() => {
     console.log('[Firebase Environment Variables Diagnostic]');
@@ -244,6 +273,89 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           >
             Cancel
           </button>
+        </div>
+
+        {/* Client Tax Deadline Push Notifications Opt-In (Phase 1) */}
+        <div className="mt-5 pt-4 border-t border-[#E8E3D9] text-left space-y-2.5">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 rounded-md bg-[#E8F8EE] flex items-center justify-center text-[#20BA68] shrink-0">
+              <Bell className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-[#0F201C]">
+                Tax Deadline Alerts
+              </h3>
+              <p className="text-[10.5px] text-[#5C6E6A]">
+                Receive statutory filing due-date reminders on this device.
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="btn-enable-push-notifications"
+            type="button"
+            onClick={handleEnablePushNotifications}
+            disabled={pushStatus.loading}
+            className="w-full py-2.5 px-3 bg-[#FAF8F5] hover:bg-[#F2ECE1] active:bg-[#ECE5D8] text-[#0F201C] font-bold rounded-xl border border-[#D5CEC2] text-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed touch-manipulation"
+          >
+            {pushStatus.loading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#20BA68]" />
+                <span>Requesting device permission...</span>
+              </>
+            ) : pushStatus.result?.success ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#20BA68]" />
+                <span>Alerts Active (Click to refresh token)</span>
+              </>
+            ) : (
+              <>
+                <Bell className="w-3.5 h-3.5 text-[#20BA68]" />
+                <span>Enable Push Alerts on this Device</span>
+              </>
+            )}
+          </button>
+
+          {/* Feedback & Token Preview */}
+          {pushStatus.result && (
+            <div
+              className={`p-2.5 rounded-xl text-xs space-y-1.5 ${
+                pushStatus.result.success
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-950'
+                  : 'bg-amber-50 border border-amber-200 text-amber-950'
+              }`}
+            >
+              <div className="flex items-start space-x-2">
+                {pushStatus.result.success ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                <div className="font-semibold text-[11px] leading-tight">
+                  {pushStatus.result.success
+                    ? 'Device registered for tax deadline notifications.'
+                    : pushStatus.result.error || 'Notification setup could not be completed.'}
+                </div>
+              </div>
+
+              {pushStatus.result.token && (
+                <div className="pt-0.5">
+                  <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-lg px-2 py-1 font-mono text-[10px] text-emerald-950">
+                    <span className="truncate mr-2 font-mono">
+                      {pushStatus.result.token.slice(0, 16)}...{pushStatus.result.token.slice(-10)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyToken(pushStatus.result?.token || '')}
+                      className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition-colors cursor-pointer"
+                    >
+                      {copiedToken ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -52,6 +52,10 @@ export const getFirebaseEnvDiagnostics = (): EnvDiagnosticItem[] => [
     name: 'VITE_FIREBASE_APP_ID',
     status: Boolean(import.meta.env.VITE_FIREBASE_APP_ID) ? 'PRESENT' : 'MISSING',
   },
+  {
+    name: 'VITE_FIREBASE_VAPID_PUBLIC_KEY',
+    status: Boolean(import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY) ? 'PRESENT' : 'MISSING',
+  },
 ];
 
 export const isFirebaseConfigured = (): boolean => {
@@ -278,3 +282,164 @@ export const getAuthErrorMessage = (error: unknown): string => {
       return 'Authentication could not be completed. Please try again.';
   }
 };
+
+/* -------------------------------------------------------------------------- */
+/* Firebase Cloud Messaging (FCM) - Web Push & Android TWA Support (Phase 1)   */
+/* -------------------------------------------------------------------------- */
+
+let fcmMessagingInstance: import('firebase/messaging').Messaging | null = null;
+let fcmSwRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+
+export const isPushMessagingSupported = async (): Promise<boolean> => {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window) ||
+    !('Notification' in window)
+  ) {
+    return false;
+  }
+  try {
+    const { isSupported } = await import('firebase/messaging');
+    return await isSupported();
+  } catch {
+    return false;
+  }
+};
+
+export const getFirebaseMessaging = async (): Promise<import('firebase/messaging').Messaging | null> => {
+  if (!fcmMessagingInstance) {
+    const supported = await isPushMessagingSupported();
+    if (!supported) return null;
+    const { getMessaging } = await import('firebase/messaging');
+    const app = getFirebaseApp();
+    fcmMessagingInstance = getMessaging(app);
+  }
+  return fcmMessagingInstance;
+};
+
+export const registerFCMServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return null;
+  }
+  if (!fcmSwRegistrationPromise) {
+    fcmSwRegistrationPromise = (async () => {
+      try {
+        const config = getFirebaseConfig();
+        const params = new URLSearchParams({
+          apiKey: config.apiKey || '',
+          authDomain: config.authDomain || '',
+          projectId: config.projectId || '',
+          storageBucket: config.storageBucket || '',
+          messagingSenderId: config.messagingSenderId || '',
+          appId: config.appId || '',
+        });
+        const swUrl = `/firebase-messaging-sw.js?${params.toString()}`;
+        const reg = await navigator.serviceWorker.register(swUrl, { scope: '/' });
+        return reg;
+      } catch (err) {
+        console.warn('[FCM] Service worker registration notice:', err);
+        return null;
+      }
+    })();
+  }
+  return fcmSwRegistrationPromise;
+};
+
+export interface PushRegistrationResult {
+  success: boolean;
+  token?: string;
+  permission: NotificationPermission;
+  error?: string;
+  isSupported: boolean;
+}
+
+export const requestPushNotificationToken = async (): Promise<PushRegistrationResult> => {
+  if (typeof window === 'undefined') {
+    return {
+      success: false,
+      permission: 'default',
+      error: 'Window environment not available.',
+      isSupported: false,
+    };
+  }
+
+  const supported = await isPushMessagingSupported();
+  if (!supported) {
+    return {
+      success: false,
+      permission: 'denied',
+      error: 'Web Push notifications are not supported on this browser or in incognito mode.',
+      isSupported: false,
+    };
+  }
+
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY || '';
+  if (!vapidKey) {
+    return {
+      success: false,
+      permission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
+      error: 'VITE_FIREBASE_VAPID_PUBLIC_KEY is not configured in Vercel environment variables.',
+      isSupported: true,
+    };
+  }
+
+  try {
+    // Explicit user gesture: request browser permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      return {
+        success: false,
+        permission,
+        error:
+          permission === 'denied'
+            ? 'Notifications are blocked in your browser site settings. Please allow notifications to receive tax reminders.'
+            : 'Notification permission request was dismissed.',
+        isSupported: true,
+      };
+    }
+
+    const registration = await registerFCMServiceWorker();
+    const messaging = await getFirebaseMessaging();
+    if (!messaging) {
+      return {
+        success: false,
+        permission,
+        error: 'Unable to initialize Firebase Messaging instance.',
+        isSupported: true,
+      };
+    }
+
+    const { getToken } = await import('firebase/messaging');
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration || undefined,
+    });
+
+    if (!token) {
+      return {
+        success: false,
+        permission: 'granted',
+        error: 'FCM did not return a valid registration token.',
+        isSupported: true,
+      };
+    }
+
+    return {
+      success: true,
+      token,
+      permission: 'granted',
+      isSupported: true,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[FCM] Error acquiring notification token:', err);
+    return {
+      success: false,
+      permission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
+      error: message,
+      isSupported: true,
+    };
+  }
+};
+

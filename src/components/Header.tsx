@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, Clock, LogIn, Mail, Radio, Cloud, User } from 'lucide-react';
+import { MessageCircle, Clock, LogIn, Mail, Radio, Cloud, User, Bell, ShieldCheck } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
 
