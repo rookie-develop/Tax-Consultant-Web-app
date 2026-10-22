@@ -9,7 +9,7 @@ interface HeaderProps {
   onReset: () => void;
   onOpenModal: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint: () => void;
-  onOpenChannel: () => void;
+  onOpenChannels?: () => void;
   clientUser?: ClientUser | null;
   onOpenLogin: () => void;
   onLogout?: () => void;
@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   onReset,
   onOpenModal,
   onOpenComplaint,
-  onOpenChannel,
+  onOpenChannels,
   clientUser,
   onOpenLogin,
   onLogout,
@@ -35,21 +35,6 @@ export const Header: React.FC<HeaderProps> = React.memo(({
       ),
     [config.whatsappNumber, config.firmName]
   );
-
-  const handleOpenFeatureModal = (feature: 'Login' | 'Cloud Access') => {
-    setIsMobileMenuOpen(false);
-    onOpenModal(feature);
-  };
-
-  const handleOpenComplaint = () => {
-    setIsMobileMenuOpen(false);
-    onOpenComplaint();
-  };
-
-  const handleOpenChannel = () => {
-    setIsMobileMenuOpen(false);
-    onOpenChannel();
-  };
 
   return (
     <header className="bg-[#081E23] text-white border-b border-[#0F2D33] sticky top-0 z-30 shadow-md">
@@ -84,20 +69,22 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               Services
             </button>
 
-            <button
-              id="header-nav-channel"
-              type="button"
-              onClick={handleOpenChannel}
-              className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
-            >
-              <Radio className="w-3.5 h-3.5 text-[#20BA68]" />
-              <span>Channel</span>
-            </button>
+            {onOpenChannels && (
+              <button
+                id="header-nav-channels"
+                type="button"
+                onClick={onOpenChannels}
+                className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Radio className="w-3.5 h-3.5 text-[#20BA68]" />
+                <span>Channels</span>
+              </button>
+            )}
 
             <button
               id="header-nav-complaint"
               type="button"
-              onClick={handleOpenComplaint}
+              onClick={onOpenComplaint}
               className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
             >
               <Mail className="w-3.5 h-3.5 text-[#20BA68]" />
@@ -107,7 +94,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <button
               id="header-nav-cloud-access"
               type="button"
-              onClick={() => handleOpenFeatureModal('Cloud Access')}
+              onClick={() => onOpenModal('Cloud Access')}
               className="text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer"
             >
               <Cloud className="w-3.5 h-3.5 text-[#20BA68]" />
@@ -160,7 +147,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             href={directWaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-[#20BA68] hover:bg-[#1DA85E] active:bg-[#189452] text-[#081E23] font-black px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center space-x-1.5 sm:space-x-2 text-[11px] sm:text-xs uppercase tracking-wider transition-transform active:scale-95 shadow-sm min-h-[42px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white shrink-0"
+            className="hidden sm:inline-flex bg-[#20BA68] hover:bg-[#1DA85E] active:bg-[#189452] text-[#081E23] font-black px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl items-center space-x-1.5 sm:space-x-2 text-[11px] sm:text-xs uppercase tracking-wider transition-transform active:scale-95 shadow-sm min-h-[42px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white shrink-0"
             aria-label="Direct WhatsApp Help"
           >
             <MessageCircle className="w-4 h-4 fill-[#081E23] text-[#081E23] shrink-0" />
@@ -211,86 +198,55 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             }}
             className="lg:hidden overflow-hidden bg-[#0A262D] border-t border-[#0F2D33]"
           >
-            <div className="px-4 py-3.5 space-y-2 text-xs font-semibold">
-              <div className="grid grid-cols-2 gap-2">
-                {clientUser ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/10 text-white min-h-[42px]">
-                    <div className="flex items-center space-x-1.5 min-w-0">
-                      {clientUser.photoURL ? (
-                        <img
-                          src={clientUser.photoURL}
-                          alt={clientUser.displayName || 'Client'}
-                          referrerPolicy="no-referrer"
-                          className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
-                        />
-                      ) : (
-                        <User className="w-3.5 h-3.5 text-[#20BA68] shrink-0" />
-                      )}
-                      <span className="font-bold text-[#20BA68] text-[11px] truncate">
-                        Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}
-                      </span>
-                    </div>
-                    {onLogout && (
-                      <button
-                        id="mobile-nav-logout"
-                        type="button"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          onLogout();
-                        }}
-                        className="text-[10px] font-black uppercase text-white/70 hover:text-white px-1.5 py-0.5 rounded bg-white/10 transition-colors cursor-pointer shrink-0 ml-1"
-                      >
-                        Logout
-                      </button>
+            <div className="px-4 py-3.5 space-y-3 text-xs font-semibold">
+              {clientUser && (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/10 text-white min-h-[42px]">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    {clientUser.photoURL ? (
+                      <img
+                        src={clientUser.photoURL}
+                        alt={clientUser.displayName || 'Client'}
+                        referrerPolicy="no-referrer"
+                        className="w-4 h-4 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-[#20BA68] shrink-0" />
                     )}
+                    <span className="font-bold text-[#20BA68] text-xs truncate">
+                      Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}
+                    </span>
                   </div>
-                ) : (
-                  <button
-                    id="mobile-nav-login"
-                    type="button"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      onOpenLogin();
-                    }}
-                    className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left min-h-[42px]"
-                  >
-                    <LogIn className="w-4 h-4 text-[#20BA68]" />
-                    <span>Login</span>
-                  </button>
-                )}
+                  {onLogout && (
+                    <button
+                      id="mobile-nav-logout"
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        onLogout();
+                      }}
+                      className="text-[10px] font-black uppercase text-white/70 hover:text-white px-2 py-1 rounded bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"
+                    >
+                      Logout
+                    </button>
+                  )}
+                </div>
+              )}
 
-                <button
-                  id="mobile-nav-cloud-access"
-                  type="button"
-                  onClick={() => handleOpenFeatureModal('Cloud Access')}
-                  className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left"
-                >
-                  <Cloud className="w-4 h-4 text-[#20BA68]" />
-                  <span>Cloud Access</span>
-                </button>
+              {/* Complaint Menu Item */}
+              <button
+                id="menu-item-complaint"
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenComplaint();
+                }}
+                className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
+              >
+                <Mail className="w-4 h-4 text-[#20BA68] shrink-0" />
+                <span className="font-semibold text-xs text-white">Complaint</span>
+              </button>
 
-                <button
-                  id="mobile-nav-channel"
-                  type="button"
-                  onClick={handleOpenChannel}
-                  className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left"
-                >
-                  <Radio className="w-4 h-4 text-[#20BA68]" />
-                  <span>Channel</span>
-                </button>
-
-                <button
-                  id="mobile-nav-complaint"
-                  type="button"
-                  onClick={handleOpenComplaint}
-                  className="flex items-center space-x-2 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors cursor-pointer text-left"
-                >
-                  <Mail className="w-4 h-4 text-[#20BA68]" />
-                  <span>Complaint</span>
-                </button>
-              </div>
-
-              <div className="pt-2 border-t border-[#0F2D33] flex items-center justify-between text-[11px] text-[#88A9A2]">
+              <div className="flex items-center justify-between pt-1 border-t border-[#0F2D33] text-[11px] text-[#88A9A2]">
                 <span className="flex items-center space-x-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#20BA68]" />
                   <span>{config.workingHours}</span>

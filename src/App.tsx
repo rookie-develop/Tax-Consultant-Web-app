@@ -11,6 +11,8 @@ import {
   ChevronRight,
   Clock,
   Search,
+  Users,
+  X,
 } from 'lucide-react';
 import { AppConfig, ServiceCategory, SubService, ClientUser, ClientRecord } from './types';
 import { DEFAULT_CONFIG, SERVICE_CATEGORIES } from './data/servicesData';
@@ -22,6 +24,8 @@ import { Footer } from './components/Footer';
 import { buildWhatsAppUrl } from './utils/whatsapp';
 import { subscribeToAuthChanges, logoutFromFirebase, getClientByUid } from './config/firebase';
 
+import { BottomNav, BottomNavTab } from './components/BottomNav';
+
 // Lazy load secondary views & modals to keep initial bundle lightweight on mobile
 const WhatsAppRequestView = lazy(() =>
   import('./components/WhatsAppRequestView').then((m) => ({ default: m.WhatsAppRequestView }))
@@ -29,17 +33,20 @@ const WhatsAppRequestView = lazy(() =>
 const LoginPage = lazy(() =>
   import('./components/LoginPage').then((m) => ({ default: m.LoginPage }))
 );
+const ComplaintPage = lazy(() =>
+  import('./components/ComplaintPage').then((m) => ({ default: m.ComplaintPage }))
+);
+const ChannelsPage = lazy(() =>
+  import('./components/ChannelsPage').then((m) => ({ default: m.ChannelsPage }))
+);
 const CloudAccessModal = lazy(() =>
   import('./components/CloudAccessModal').then((m) => ({ default: m.CloudAccessModal }))
 );
 const ComingSoonModal = lazy(() =>
   import('./components/ComingSoonModal').then((m) => ({ default: m.ComingSoonModal }))
 );
-const ComplaintModal = lazy(() =>
-  import('./components/ComplaintModal').then((m) => ({ default: m.ComplaintModal }))
-);
-const ChannelModal = lazy(() =>
-  import('./components/ChannelModal').then((m) => ({ default: m.ChannelModal }))
+const NotificationModal = lazy(() =>
+  import('./components/NotificationModal').then((m) => ({ default: m.NotificationModal }))
 );
 
 // High-performance scroll to top helper
@@ -67,9 +74,11 @@ export default function App() {
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isLoginPageOpen, setIsLoginPageOpen] = useState(false);
-  const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | null>(null);
-  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
-  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+  const [isComplaintPageOpen, setIsComplaintPageOpen] = useState(false);
+  const [isChannelsPageOpen, setIsChannelsPageOpen] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState<'Community' | 'Channels' | null>(null);
+  const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | 'My Requests' | null>(null);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   // Authenticated Client Session - Firebase Auth & Firestore Client Record
   const [clientUser, setClientUser] = useState<ClientUser | null>(null);
@@ -91,12 +100,41 @@ export default function App() {
     };
   }, []);
 
+  // Listen to browser back/forward buttons and URL hash
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash;
+      if (hash === '#complaint') {
+        setIsComplaintPageOpen(true);
+        setIsChannelsPageOpen(false);
+        setIsLoginPageOpen(false);
+      } else if (hash === '#channels') {
+        setIsChannelsPageOpen(true);
+        setIsComplaintPageOpen(false);
+        setIsLoginPageOpen(false);
+      } else if (hash === '#login') {
+        setIsLoginPageOpen(true);
+        setIsChannelsPageOpen(false);
+        setIsComplaintPageOpen(false);
+      } else {
+        setIsComplaintPageOpen(false);
+        setIsChannelsPageOpen(false);
+        setIsLoginPageOpen(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Determine current step
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
 
   // Handlers with useCallback to prevent unnecessary re-renders of memoized components
   const handleSelectCategory = useCallback((category: ServiceCategory) => {
     setIsLoginPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
     setSelectedCategory(category);
     setSelectedSubService(null);
     scrollToTop();
@@ -104,6 +142,8 @@ export default function App() {
 
   const handleSelectSubService = useCallback((subService: SubService) => {
     setIsLoginPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
     setSelectedSubService(subService);
     scrollToTop();
   }, []);
@@ -111,6 +151,8 @@ export default function App() {
   const handleSelectServiceFromSearch = useCallback(
     (category: ServiceCategory, subService: SubService) => {
       setIsLoginPageOpen(false);
+      setIsComplaintPageOpen(false);
+      setIsChannelsPageOpen(false);
       setSelectedCategory(category);
       setSelectedSubService(subService);
       setIsMobileSearchOpen(false);
@@ -121,26 +163,41 @@ export default function App() {
 
   const handleGoToStep1 = useCallback(() => {
     setIsLoginPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
     setSelectedCategory(null);
     setSelectedSubService(null);
     setIsMobileSearchOpen(false);
+    if (window.location.hash) {
+      window.history.pushState(null, '', window.location.pathname);
+    }
     scrollToTop();
   }, []);
 
   const handleGoToStep2 = useCallback(() => {
     setIsLoginPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
     setSelectedSubService(null);
     scrollToTop();
   }, []);
 
   const handleOpenLogin = useCallback(() => {
     setIsLoginPageOpen(true);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
     setIsMobileSearchOpen(false);
+    if (window.location.hash !== '#login') {
+      window.history.pushState({ page: 'login' }, '', '#login');
+    }
     scrollToTop();
   }, []);
 
   const handleCloseLogin = useCallback(() => {
     setIsLoginPageOpen(false);
+    if (window.location.hash === '#login') {
+      window.history.back();
+    }
     scrollToTop();
   }, []);
 
@@ -202,8 +259,97 @@ export default function App() {
     }
   }, [handleOpenLogin, handleCloudAccess]);
 
-  const handleOpenComplaint = useCallback(() => setIsComplaintModalOpen(true), []);
-  const handleOpenChannel = useCallback(() => setIsChannelModalOpen(true), []);
+  const handleOpenComplaint = useCallback(() => {
+    setModalFeature(null);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsLoginPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setIsComplaintPageOpen(true);
+    if (window.location.hash !== '#complaint') {
+      window.history.pushState({ page: 'complaint' }, '', '#complaint');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleBackFromComplaint = useCallback(() => {
+    setIsComplaintPageOpen(false);
+    if (window.location.hash === '#complaint') {
+      window.history.back();
+    }
+    scrollToTop();
+  }, []);
+
+  const handleOpenChannels = useCallback(() => {
+    setModalFeature(null);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsLoginPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(true);
+    if (window.location.hash !== '#channels') {
+      window.history.pushState({ page: 'channels' }, '', '#channels');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleSelectCommunity = useCallback(() => {
+    setComingSoonFeature('Community');
+  }, []);
+
+  const handleSelectChannels = useCallback(() => {
+    handleOpenChannels();
+  }, [handleOpenChannels]);
+
+  const handleCloseComingSoon = useCallback(() => {
+    setComingSoonFeature(null);
+  }, []);
+
+  // Bottom Navigation Active Tab Resolution
+  const activeTab: BottomNavTab = isLoginPageOpen
+    ? 'login'
+    : isComplaintPageOpen
+    ? 'complaint'
+    : isChannelsPageOpen
+    ? 'channels'
+    : comingSoonFeature === 'Community'
+    ? 'community'
+    : cloudModalType !== null
+    ? 'cloud'
+    : modalFeature === 'My Requests'
+    ? 'requests'
+    : 'home';
+
+  const handleBottomSelectHome = useCallback(() => {
+    setModalFeature(null);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsNotificationModalOpen(false);
+    setIsLoginPageOpen(false);
+    handleGoToStep1();
+  }, [handleGoToStep1]);
+
+  const handleBottomSelectRequests = useCallback(() => {
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsNotificationModalOpen(false);
+    setIsLoginPageOpen(false);
+    setModalFeature('My Requests');
+  }, []);
+
+  const handleBottomSelectLogin = useCallback(() => {
+    setModalFeature(null);
+    setIsComplaintPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsNotificationModalOpen(false);
+    handleOpenLogin();
+  }, [handleOpenLogin]);
 
   return (
     <div className="min-h-screen bg-[#F4F0E8] text-[#0F201C] flex flex-col font-sans selection:bg-[#23A87B]/25 selection:text-[#081E23]">
@@ -213,14 +359,43 @@ export default function App() {
         onReset={handleGoToStep1}
         onOpenModal={handleOpenModalFeature}
         onOpenComplaint={handleOpenComplaint}
-        onOpenChannel={handleOpenChannel}
+        onOpenChannels={handleOpenChannels}
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
         onLogout={handleLogout}
       />
 
+      {/* HOME PAGE HEADER: Greeting, Heading, Rounded Search Bar */}
+      {currentStep === 1 && !isLoginPageOpen && !isComplaintPageOpen && !isChannelsPageOpen && (
+        <section className="bg-[#081E23] text-white border-b border-[#0F2D33] px-3.5 sm:px-6 lg:px-8 pt-4 pb-6 sm:pb-8 shadow-sm">
+          <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4">
+            {/* Greeting */}
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#20BA68]">
+                <span className="w-2 h-2 rounded-full bg-[#20BA68] animate-pulse" />
+                <span>Good Morning{clientUser?.displayName ? `, ${clientUser.displayName.split(' ')[0]}` : ''}</span>
+              </div>
+            </div>
+
+            {/* Main Heading */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              How can we help you today?
+            </h1>
+
+            {/* Rounded Search Bar */}
+            <div className="max-w-xl w-full">
+              <SearchBar
+                categories={SERVICE_CATEGORIES}
+                onSelectService={handleSelectServiceFromSearch}
+                placeholder="Search for a service..."
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 pb-28 sm:pb-32">
         {/* View Transitions */}
         <AnimatePresence mode="wait">
           {/* CLIENT LOGIN PAGE VIEW */}
@@ -239,6 +414,34 @@ export default function App() {
                 onLoginSuccess={handleLoginSuccess}
               />
             </Suspense>
+          ) : isComplaintPageOpen ? (
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <ComplaintPage
+                key="complaint-page-view"
+                config={config}
+                clientUser={clientUser}
+                onBack={handleBackFromComplaint}
+              />
+            </Suspense>
+          ) : isChannelsPageOpen ? (
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <ChannelsPage
+                key="channels-page-view"
+                config={config}
+              />
+            </Suspense>
           ) : (
             <>
               {/* STEP 1: Main Category Selection */}
@@ -249,127 +452,30 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
-                  className="space-y-6 sm:space-y-8"
+                  className="space-y-3.5 sm:space-y-5"
                 >
-                  {/* Hero Title & Description */}
-                  <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2 px-1">
-                    {/* Client Greeting when logged in */}
-                    {clientUser && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#20BA68]/15 border border-[#20BA68]/30 text-xs font-bold text-[#081E23] mb-1.5"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-[#20BA68]" />
-                        <span>Hi, {clientUser.displayName || clientUser.email?.split('@')[0] || 'Client'}</span>
-                      </motion.div>
-                    )}
-
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#0F201C] leading-tight">
-                      How can we help you today?
-                    </h1>
-                    <p className="text-sm sm:text-base text-[#5C6E6A] font-medium">
-                      Choose a service to get started.
-                    </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A]">
+                      SERVICES
+                    </h2>
+                    <span className="text-[11px] text-[#5C6E6A] font-medium hidden sm:inline">
+                      Tap a service category to explore filings & advisory
+                    </span>
                   </div>
 
-              {/* Desktop / Laptop / Large Screens Search Bar */}
-              <div className="hidden md:block max-w-xl mx-auto w-full">
-                <SearchBar
-                  categories={SERVICE_CATEGORIES}
-                  onSelectService={handleSelectServiceFromSearch}
-                  placeholder="Search for a service..."
-                />
-              </div>
-
-              {/* Categories Grid */}
-              <div>
-                <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4 min-h-[36px]">
-                  <h2 className="text-xs font-black uppercase tracking-widest text-[#5C6E6A] shrink-0">
-                    SERVICES
-                  </h2>
-
-                  {/* Mobile Phones Search (Icon / Expandable Field) */}
-                  <div className="md:hidden flex items-center justify-end flex-1 min-w-0">
-                    <AnimatePresence mode="wait" initial={false}>
-                      {!isMobileSearchOpen ? (
-                        <motion.button
-                          key="mobile-search-trigger"
-                          id="btn-mobile-search-trigger"
-                          type="button"
-                          onClick={() => setIsMobileSearchOpen(true)}
-                          initial={{ opacity: 0, scale: 0.85 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.85 }}
-                          transition={{ duration: 0.15 }}
-                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-[#E2DDD2] text-[#0F201C] hover:text-[#23A87B] hover:border-[#23A87B] active:scale-95 shadow-xs transition-all cursor-pointer"
-                          aria-label="Search for a service"
-                        >
-                          <Search className="w-4 h-4 text-[#0F201C]" />
-                        </motion.button>
-                      ) : (
-                        <motion.div
-                          key="mobile-search-expanded"
-                          initial={{ opacity: 0, width: '40px' }}
-                          animate={{ opacity: 1, width: '100%' }}
-                          exit={{ opacity: 0, width: '40px' }}
-                          transition={{ duration: 0.2, ease: 'easeOut' }}
-                          className="w-full max-w-[280px]"
-                        >
-                          <SearchBar
-                            categories={SERVICE_CATEGORIES}
-                            onSelectService={handleSelectServiceFromSearch}
-                            placeholder="Search for a service..."
-                            autoFocus
-                            onClose={() => setIsMobileSearchOpen(false)}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  {/* 3-Column Service Grid on mobile, 4-column on tablet/desktop */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-3.5 md:gap-4.5">
+                    {SERVICE_CATEGORIES.map((category) => (
+                      <CategoryCard
+                        key={category.id}
+                        category={category}
+                        isSelected={selectedCategory?.id === category.id}
+                        onSelect={handleSelectCategory}
+                      />
+                    ))}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5">
-                  {SERVICE_CATEGORIES.map((category) => (
-                    <CategoryCard
-                      key={category.id}
-                      category={category}
-                      isSelected={selectedCategory?.id === category.id}
-                      onSelect={handleSelectCategory}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Helpful Direct Contact Callout */}
-              <div className="bg-white rounded-2xl border border-[#E2DDD2] p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                <div className="space-y-1.5 text-center sm:text-left">
-                  <h3 className="text-base sm:text-lg font-black text-[#0F201C] flex items-center justify-center sm:justify-start space-x-2">
-                    <HelpCircle className="w-5 h-5 text-[#23A87B] shrink-0" />
-                    <span>Uncertain about which specific service you need?</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#5C6E6A] max-w-xl font-medium leading-relaxed">
-                    Connect directly with our senior tax consultants on WhatsApp for personalized advisory, assessment notice evaluation, or corporate compliance audits.
-                  </p>
-                </div>
-
-                <a
-                  id="btn-general-whatsapp-inquiry"
-                  href={buildWhatsAppUrl(
-                    config.whatsappNumber,
-                    `Hello ${config.firmName} Team, I would like to consult regarding my tax situation. Please guide me.`
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto shrink-0 bg-[#081E23] hover:bg-[#23A87B] active:bg-[#1E9E73] text-white font-black px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-xs transition-all active:scale-95 cursor-pointer min-h-[48px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B]"
-                >
-                  <MessageCircle className="w-4 h-4 text-[#20BA68] fill-[#20BA68] shrink-0" />
-                  <span className="whitespace-nowrap">General WhatsApp Inquiry</span>
-                  <ChevronRight className="w-4 h-4 shrink-0" />
-                </a>
-              </div>
-            </motion.div>
-          )}
+                </motion.div>
+              )}
 
           {/* STEP 2: Sub-Services for Selected Category */}
           {currentStep === 2 && selectedCategory && (
@@ -470,7 +576,7 @@ export default function App() {
         config={config}
         onOpenModal={handleOpenModalFeature}
         onOpenComplaint={handleOpenComplaint}
-        onOpenChannel={handleOpenChannel}
+        onOpenChannels={handleOpenChannels}
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
       />
@@ -488,30 +594,37 @@ export default function App() {
         />
       </Suspense>
 
-      {/* Coming Soon Placeholder Modal for other features */}
+      {/* Improved Coming Soon Modal for Channels, Community & Secondary Features */}
       <Suspense fallback={null}>
         <ComingSoonModal
-          isOpen={!!modalFeature}
-          title={modalFeature || ''}
-          onClose={() => setModalFeature(null)}
+          isOpen={comingSoonFeature !== null || !!modalFeature}
+          feature={comingSoonFeature || modalFeature || ''}
+          onClose={() => {
+            setComingSoonFeature(null);
+            setModalFeature(null);
+          }}
         />
       </Suspense>
 
-      {/* Complaint Confirmation Modal */}
+      {/* Tax Alerts & Notifications Modal */}
       <Suspense fallback={null}>
-        <ComplaintModal
-          isOpen={isComplaintModalOpen}
-          onClose={() => setIsComplaintModalOpen(false)}
+        <NotificationModal
+          isOpen={isNotificationModalOpen}
+          onClose={() => setIsNotificationModalOpen(false)}
         />
       </Suspense>
 
-      {/* Channel Confirmation Modal */}
-      <Suspense fallback={null}>
-        <ChannelModal
-          isOpen={isChannelModalOpen}
-          onClose={() => setIsChannelModalOpen(false)}
-        />
-      </Suspense>
+      {/* Persistent Bottom Navigation Bar */}
+      <BottomNav
+        activeTab={activeTab}
+        onSelectHome={handleBottomSelectHome}
+        onSelectCommunity={handleSelectCommunity}
+        onSelectCloudAccess={handleCloudAccess}
+        onSelectChannels={handleSelectChannels}
+        onSelectLogin={handleBottomSelectLogin}
+        onSelectComplaint={handleOpenComplaint}
+        clientUser={clientUser}
+      />
     </div>
   );
 }

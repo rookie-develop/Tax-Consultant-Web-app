@@ -7,7 +7,7 @@ interface FooterProps {
   config: AppConfig;
   onOpenModal?: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint?: () => void;
-  onOpenChannel?: () => void;
+  onOpenChannels?: () => void;
   clientUser?: ClientUser | null;
   onOpenLogin?: () => void;
 }
@@ -16,7 +16,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
   config,
   onOpenModal,
   onOpenComplaint,
-  onOpenChannel,
+  onOpenChannels,
   clientUser,
   onOpenLogin,
 }) => {
@@ -120,15 +120,15 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                   <span>Complaint</span>
                 </button>
               )}
-              {onOpenChannel && (
+              {onOpenChannels && (
                 <button
-                  id="footer-nav-channel"
+                  id="footer-nav-channels"
                   type="button"
-                  onClick={onOpenChannel}
+                  onClick={onOpenChannels}
                   className="hover:text-white transition-colors cursor-pointer inline-flex items-center space-x-1"
                 >
                   <Radio className="w-3 h-3 text-[#20BA68]" />
-                  <span>Channel</span>
+                  <span>Channels</span>
                 </button>
               )}
               {onOpenModal && (

@@ -31,6 +31,8 @@ export interface AppConfig {
   displayPhone: string;
   emailContact: string;
   workingHours: string;
+  whatsappChannelUrl?: string;
+  youtubeChannelUrl?: string;
 }
 
 export interface ClientUser {
