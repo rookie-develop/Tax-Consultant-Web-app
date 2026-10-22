@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, Bell } from 'lucide-react';
+import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, Bell, Send } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import {
   signInWithGooglePopup,
@@ -9,6 +9,7 @@ import {
   getFirebaseEnvDiagnostics,
   requestPushNotificationToken,
   PushRegistrationResult,
+  getFirebaseAuth,
 } from '../config/firebase';
 
 interface LoginPageProps {
@@ -35,6 +36,16 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
     result: null,
   });
   const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedUid, setCopiedUid] = useState(false);
+  const [testSendStatus, setTestSendStatus] = useState<{
+    loading: boolean;
+    message: string | null;
+    error: string | null;
+  }>({
+    loading: false,
+    message: null,
+    error: null,
+  });
   const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
 
   const handleEnablePushNotifications = async () => {
@@ -53,6 +64,59 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
       setTimeout(() => setCopiedToken(false), 2500);
     } catch (err) {
       console.warn('Failed to copy token:', err);
+    }
+  };
+
+  const handleCopyUid = async (uidToCopy: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(uidToCopy);
+      }
+      setCopiedUid(true);
+      setTimeout(() => setCopiedUid(false), 2500);
+    } catch (err) {
+      console.warn('Failed to copy UID:', err);
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    if (!pushStatus.result?.token) return;
+    setTestSendStatus({ loading: true, message: null, error: null });
+    try {
+      const auth = getFirebaseAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('Please sign in with Google first.');
+      }
+
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ token: pushStatus.result.token }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        const errorKey = data?.error || `HTTP_${response.status}`;
+        throw new Error(errorKey);
+      }
+
+      setTestSendStatus({
+        loading: false,
+        message: `Test notification sent! Message ID: ${data.messageId}`,
+        error: null,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setTestSendStatus({
+        loading: false,
+        message: null,
+        error: msg,
+      });
     }
   };
 
@@ -352,6 +416,75 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
                       {copiedToken ? 'Copied' : 'Copy'}
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Test Dispatch Controls (Authenticated Test Session Only) */}
+          {authenticatedUser && (
+            <div className="pt-2 space-y-2 border-t border-[#E8E3D9]">
+              {/* Account UID Display for TEST_ADMIN_UIDS Setup */}
+              <div className="bg-[#FAF8F5] border border-[#E2DDD2] rounded-lg p-2 text-left space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-[#5C6E6A] uppercase tracking-wider">
+                    Your Firebase UID (for TEST_ADMIN_UIDS)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyUid(authenticatedUser.uid)}
+                    className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-[#E8F8EE] text-[#0E9355] text-[10px] font-bold hover:bg-[#D5F3E4] transition-colors cursor-pointer"
+                  >
+                    {copiedUid ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedUid ? 'Copied' : 'Copy UID'}</span>
+                  </button>
+                </div>
+                <div className="font-mono text-[10.5px] text-[#0F201C] select-all truncate">
+                  {authenticatedUser.uid}
+                </div>
+              </div>
+
+              {/* Single-Target Test Dispatch Button */}
+              {pushStatus.result?.token && (
+                <div className="space-y-1.5">
+                  <button
+                    id="btn-send-test-push"
+                    type="button"
+                    onClick={handleSendTestNotification}
+                    disabled={testSendStatus.loading}
+                    className="w-full py-2 px-3 bg-[#081E23] hover:bg-[#20BA68] active:bg-[#189452] text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed touch-manipulation"
+                  >
+                    {testSendStatus.loading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#20BA68]" />
+                        <span>Verifying with server & sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5 text-[#20BA68]" />
+                        <span>Send Test Alert to this Device</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Test Send Feedback */}
+                  {testSendStatus.message && (
+                    <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs flex items-start space-x-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="font-semibold text-[10.5px] leading-tight">
+                        {testSendStatus.message}
+                      </div>
+                    </div>
+                  )}
+
+                  {testSendStatus.error && (
+                    <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-950 text-xs flex items-start space-x-2">
+                      <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 mt-0.5" />
+                      <div className="font-semibold text-[10.5px] leading-tight">
+                        Error: {testSendStatus.error}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
