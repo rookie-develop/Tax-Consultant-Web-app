@@ -16,8 +16,9 @@ import { ServiceCategory } from '../types';
 
 interface CategoryCardProps {
   category: ServiceCategory;
-  isSelected: boolean;
-  onSelect: (category: ServiceCategory) => void;
+  isSelected?: boolean;
+  onSelect?: (category: ServiceCategory) => void;
+  onClick?: (category: ServiceCategory) => void;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -48,8 +49,9 @@ const pastelStyles: Record<string, { bg: string; text: string; border: string }>
 
 export const CategoryCard: React.FC<CategoryCardProps> = React.memo(({
   category,
-  isSelected,
+  isSelected = false,
   onSelect,
+  onClick,
 }) => {
   const IconComponent = iconMap[category.iconName] || FileText;
   const pastel = pastelStyles[category.id] || {
@@ -58,11 +60,16 @@ export const CategoryCard: React.FC<CategoryCardProps> = React.memo(({
     border: 'border-emerald-200',
   };
 
+  const handleClick = () => {
+    if (onSelect) onSelect(category);
+    if (onClick) onClick(category);
+  };
+
   return (
     <button
       type="button"
       id={`category-card-${category.id}`}
-      onClick={() => onSelect(category)}
+      onClick={handleClick}
       className={`w-full flex flex-col items-center justify-center bg-white rounded-2xl p-2.5 sm:p-3.5 md:p-4 text-center group transition-all duration-150 cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B] active:scale-[0.96] min-h-[102px] sm:min-h-[118px] md:min-h-[128px] ${
         isSelected
           ? 'border-2 border-[#23A87B] shadow-md ring-2 ring-[#23A87B]/20'

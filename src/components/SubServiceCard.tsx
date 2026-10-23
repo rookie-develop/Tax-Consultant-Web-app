@@ -4,19 +4,27 @@ import { SubService } from '../types';
 
 interface SubServiceCardProps {
   subService: SubService;
-  isSelected: boolean;
-  onSelect: (subService: SubService) => void;
+  isSelected?: boolean;
+  onSelect?: (subService: SubService) => void;
+  onClick?: (subService: SubService) => void;
 }
 
 export const SubServiceCard: React.FC<SubServiceCardProps> = React.memo(({
   subService,
-  isSelected,
+  isSelected = false,
   onSelect,
+  onClick,
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSelect) onSelect(subService);
+    if (onClick) onClick(subService);
+  };
+
   return (
     <div
       id={`subservice-card-${subService.id}`}
-      onClick={() => onSelect(subService)}
+      onClick={handleClick}
       className={`p-5 sm:p-6 rounded-2xl cursor-pointer text-left transition-all duration-150 flex flex-col justify-between relative touch-manipulation active:scale-[0.99] select-none min-h-[140px] sm:min-h-[150px] ${
         isSelected
           ? 'border-2 border-[#23A87B] bg-white shadow-md ring-2 ring-[#23A87B]/20'

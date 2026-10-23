@@ -14,19 +14,23 @@ import {
 
 interface LoginPageProps {
   config: AppConfig;
+  clientUser?: ClientUser | null;
   onBack: () => void;
   onLoginSuccess: (user: ClientUser) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   config,
+  clientUser,
   onBack,
   onLoginSuccess,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
-  const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(null);
+  const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(
+    clientUser || null
+  );
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pushStatus, setPushStatus] = useState<{
     loading: boolean;
@@ -48,10 +52,53 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   });
   const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
 
+  // Sync authenticated session from props or Firebase Auth
+  useEffect(() => {
+    if (clientUser) {
+      setAuthenticatedUser(clientUser);
+    } else {
+      const auth = getFirebaseAuth();
+      if (auth.currentUser) {
+        setAuthenticatedUser({
+          uid: auth.currentUser.uid,
+          displayName: auth.currentUser.displayName,
+          email: auth.currentUser.email,
+          photoURL: auth.currentUser.photoURL,
+        });
+      }
+    }
+  }, [clientUser]);
+
+  // Restore previously generated device push token if already granted on this device
+  useEffect(() => {
+    try {
+      const cachedToken = localStorage.getItem('arsca_fcm_token');
+      if (cachedToken && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        setPushStatus((prev) => {
+          if (prev.result?.token) return prev;
+          return {
+            loading: false,
+            result: {
+              success: true,
+              token: cachedToken,
+              permission: 'granted',
+              isSupported: true,
+            },
+          };
+        });
+      }
+    } catch {}
+  }, []);
+
   const handleEnablePushNotifications = async () => {
     setPushStatus({ loading: true, result: null });
     setCopiedToken(false);
     const res = await requestPushNotificationToken();
+    if (res.token) {
+      try {
+        localStorage.setItem('arsca_fcm_token', res.token);
+      } catch {}
+    }
     setPushStatus({ loading: false, result: res });
   };
 
@@ -79,8 +126,21 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
     }
   };
 
+  const activeUser = authenticatedUser || clientUser || (typeof window !== 'undefined' ? getFirebaseAuth().currentUser : null);
+  const activeToken = pushStatus.result?.token || (typeof window !== 'undefined' ? localStorage.getItem('arsca_fcm_token') || '' : '');
+  const hasActiveUser = Boolean(activeUser && activeUser.uid);
+  const hasValidToken = Boolean(activeToken && activeToken.trim().length > 20);
+
   const handleSendTestNotification = async () => {
-    if (!pushStatus.result?.token) return;
+    const targetToken = activeToken;
+    if (!targetToken) {
+      setTestSendStatus({
+        loading: false,
+        message: null,
+        error: 'No registered device token available. Please enable alerts above.',
+      });
+      return;
+    }
     setTestSendStatus({ loading: true, message: null, error: null });
     try {
       const auth = getFirebaseAuth();
@@ -96,7 +156,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ token: pushStatus.result.token }),
+        body: JSON.stringify({ token: targetToken }),
       });
 
       const data = await response.json().catch(() => null);
@@ -367,7 +427,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-[#20BA68]" />
                 <span>Requesting device permission...</span>
               </>
-            ) : pushStatus.result?.success ? (
+            ) : (pushStatus.result?.success || hasValidToken) ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#20BA68]" />
                 <span>Alerts Active (Click to refresh token)</span>
@@ -381,36 +441,36 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           </button>
 
           {/* Feedback & Token Preview */}
-          {pushStatus.result && (
+          {(pushStatus.result || hasValidToken) && (
             <div
               className={`p-2.5 rounded-xl text-xs space-y-1.5 ${
-                pushStatus.result.success
+                (pushStatus.result?.success || hasValidToken)
                   ? 'bg-emerald-50 border border-emerald-200 text-emerald-950'
                   : 'bg-amber-50 border border-amber-200 text-amber-950'
               }`}
             >
               <div className="flex items-start space-x-2">
-                {pushStatus.result.success ? (
+                {(pushStatus.result?.success || hasValidToken) ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 )}
                 <div className="font-semibold text-[11px] leading-tight">
-                  {pushStatus.result.success
+                  {(pushStatus.result?.success || hasValidToken)
                     ? 'Device registered for tax deadline notifications.'
-                    : pushStatus.result.error || 'Notification setup could not be completed.'}
+                    : pushStatus.result?.error || 'Notification setup could not be completed.'}
                 </div>
               </div>
 
-              {pushStatus.result.token && (
+              {hasValidToken && (
                 <div className="pt-0.5">
                   <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-lg px-2 py-1 font-mono text-[10px] text-emerald-950">
                     <span className="truncate mr-2 font-mono">
-                      {pushStatus.result.token.slice(0, 16)}...{pushStatus.result.token.slice(-10)}
+                      {activeToken.slice(0, 16)}...{activeToken.slice(-10)}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopyToken(pushStatus.result?.token || '')}
+                      onClick={() => handleCopyToken(activeToken)}
                       className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition-colors cursor-pointer"
                     >
                       {copiedToken ? 'Copied' : 'Copy'}
@@ -422,7 +482,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           )}
 
           {/* Test Dispatch Controls (Authenticated Test Session Only) */}
-          {authenticatedUser && (
+          {hasActiveUser && activeUser && (
             <div className="pt-2 space-y-2 border-t border-[#E8E3D9]">
               {/* Account UID Display for TEST_ADMIN_UIDS Setup */}
               <div className="bg-[#FAF8F5] border border-[#E2DDD2] rounded-lg p-2 text-left space-y-1">
@@ -432,7 +492,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleCopyUid(authenticatedUser.uid)}
+                    onClick={() => handleCopyUid(activeUser.uid)}
                     className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-[#E8F8EE] text-[#0E9355] text-[10px] font-bold hover:bg-[#D5F3E4] transition-colors cursor-pointer"
                   >
                     {copiedUid ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
@@ -440,12 +500,12 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
                   </button>
                 </div>
                 <div className="font-mono text-[10.5px] text-[#0F201C] select-all truncate">
-                  {authenticatedUser.uid}
+                  {activeUser.uid}
                 </div>
               </div>
 
               {/* Single-Target Test Dispatch Button */}
-              {pushStatus.result?.token && (
+              {hasValidToken ? (
                 <div className="space-y-1.5">
                   <button
                     id="btn-send-test-push"
@@ -486,6 +546,10 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
                     </div>
                   )}
                 </div>
+              ) : (
+                <p className="text-[10px] text-[#889B96] italic text-center">
+                  Enable alerts above to generate a device token for test dispatch.
+                </p>
               )}
             </div>
           )}

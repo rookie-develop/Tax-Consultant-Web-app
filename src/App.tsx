@@ -418,6 +418,7 @@ export default function App() {
               <LoginPage
                 key="login-page-view"
                 config={config}
+                clientUser={clientUser}
                 onBack={handleCloseLogin}
                 onLoginSuccess={handleLoginSuccess}
               />
@@ -473,6 +474,8 @@ export default function App() {
                       <CategoryCard
                         key={category.id}
                         category={category}
+                        isSelected={selectedCategory?.id === category.id}
+                        onSelect={handleSelectCategory}
                         onClick={handleSelectCategory}
                       />
                     ))}
@@ -508,6 +511,8 @@ export default function App() {
                       <SubServiceCard
                         key={sub.id}
                         subService={sub}
+                        isSelected={selectedSubService?.id === sub.id}
+                        onSelect={handleSelectSubService}
                         onClick={handleSelectSubService}
                       />
                     ))}
@@ -549,6 +554,8 @@ export default function App() {
                       category={selectedCategory}
                       subService={selectedSubService}
                       config={config}
+                      onBackToSubServices={handleGoToStep2}
+                      onBackToCategories={handleGoToStep1}
                     />
                   </Suspense>
                 </motion.div>
