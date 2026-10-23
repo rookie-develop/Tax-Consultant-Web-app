@@ -34,6 +34,11 @@
     touch-action: manipulation;
   }
 
+  /* Smooth momentum scrolling for mobile devices */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Ensure inputs have at least 16px font size on mobile to prevent iOS Safari auto-zoom */
   input, select, textarea {
     font-size: 16px;
@@ -43,5 +48,12 @@
       font-size: 0.875rem;
     }
   }
+}
+
+/* GPU hardware acceleration for silky smooth mobile animations */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 

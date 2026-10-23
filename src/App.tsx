@@ -210,11 +210,11 @@ export default function App() {
       const record = await getClientByUid(user.uid);
       setClientRecord(record);
     }
-    setIsLoginPageOpen(false);
-    if (window.location.hash === '#login') {
-      window.history.back();
+    // Remain on login/profile screen after successful login
+    setIsLoginPageOpen(true);
+    if (window.location.hash !== '#login') {
+      window.history.pushState({ page: 'login' }, '', '#login');
     }
-    scrollToTop();
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -421,6 +421,7 @@ export default function App() {
                 clientUser={clientUser}
                 onBack={handleCloseLogin}
                 onLoginSuccess={handleLoginSuccess}
+                onLogout={handleLogout}
               />
             </Suspense>
           ) : isComplaintPageOpen ? (

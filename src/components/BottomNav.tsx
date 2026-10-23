@@ -178,38 +178,49 @@ export const BottomNav: React.FC<BottomNavProps> = React.memo(({
           </span>
         </button>
 
-        {/* 5. LOGIN */}
+        {/* 5. LOGIN / PROFILE */}
         <button
           id="btn-bottom-nav-login"
           type="button"
           onClick={onSelectLogin}
           className="flex-1 flex flex-col items-center justify-center pb-1.5 pt-1 group cursor-pointer touch-manipulation min-w-[56px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68] rounded-xl"
-          aria-label="Login"
+          aria-label={clientUser ? 'Profile' : 'Login'}
           aria-current={activeTab === 'login' ? 'page' : undefined}
         >
           <div className="relative w-10 h-10 flex items-center justify-center">
-            {activeTab === 'login' && (
-              <motion.div
-                layoutId="bottomNavCircle"
-                className="absolute inset-0 rounded-full bg-[#20BA68] shadow-md shadow-[#20BA68]/20"
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            )}
-            {clientUser?.photoURL ? (
-              <img
-                src={clientUser.photoURL}
-                alt={clientUser.displayName || 'Client'}
-                referrerPolicy="no-referrer"
-                className="w-5 h-5 rounded-full object-cover relative z-10 ring-1 ring-white/50"
-              />
+            {clientUser ? (
+              activeTab === 'login' ? (
+                <div className="w-8.5 h-8.5 rounded-full bg-[#D8F3E5] shadow-[0_0_14px_rgba(32,186,104,0.55)] flex items-center justify-center relative z-10 select-none">
+                  <span className="text-[#081E23] font-black text-xs sm:text-sm">
+                    {(clientUser.displayName?.trim() || clientUser.email?.trim() || 'U')
+                      .charAt(0)
+                      .toUpperCase()}
+                  </span>
+                </div>
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-[#103038] text-[#88A9A2] group-hover:text-white flex items-center justify-center font-bold text-xs select-none">
+                  {(clientUser.displayName?.trim() || clientUser.email?.trim() || 'U')
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )
             ) : (
-              <User
-                className={`w-5 h-5 relative z-10 transition-colors ${
-                  activeTab === 'login'
-                    ? 'text-[#081E23] stroke-[2.4]'
-                    : 'text-[#88A9A2] group-hover:text-white stroke-[2]'
-                }`}
-              />
+              <>
+                {activeTab === 'login' && (
+                  <motion.div
+                    layoutId="bottomNavCircle"
+                    className="absolute inset-0 rounded-full bg-[#20BA68] shadow-md shadow-[#20BA68]/20"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <User
+                  className={`w-5 h-5 relative z-10 transition-colors ${
+                    activeTab === 'login'
+                      ? 'text-[#081E23] stroke-[2.4]'
+                      : 'text-[#88A9A2] group-hover:text-white stroke-[2]'
+                  }`}
+                />
+              </>
             )}
           </div>
           <span
@@ -219,7 +230,7 @@ export const BottomNav: React.FC<BottomNavProps> = React.memo(({
                 : 'font-medium text-[#88A9A2] group-hover:text-white'
             }`}
           >
-            Login
+            {clientUser ? 'Profile' : 'Login'}
           </span>
         </button>
       </div>

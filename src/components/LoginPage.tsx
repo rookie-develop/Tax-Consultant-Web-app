@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, LogOut } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import {
   signInWithGooglePopup,
+  logoutFromFirebase,
   getAuthErrorDetails,
   AuthErrorInfo,
   getFirebaseEnvDiagnostics,
@@ -15,6 +16,7 @@ interface LoginPageProps {
   clientUser?: ClientUser | null;
   onBack: () => void;
   onLoginSuccess: (user: ClientUser) => void;
+  onLogout?: () => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = React.memo(({
@@ -22,14 +24,15 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   clientUser,
   onBack,
   onLoginSuccess,
+  onLogout,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(
     clientUser || null
   );
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
 
   // Sync authenticated session from props or Firebase Auth
@@ -63,7 +66,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
     try {
       const user = await signInWithGooglePopup();
       setAuthenticatedUser(user);
-      setShowSuccessModal(true);
+      onLoginSuccess(user);
     } catch (error: unknown) {
       const details = getAuthErrorDetails(error);
       if (details.code === 'auth/popup-closed-by-user' || details.code === 'auth/cancelled-popup-request') {
@@ -76,6 +79,22 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
       setIsLoading(false);
     }
   };
+
+  const handleSignOut = useCallback(async () => {
+    setIsSigningOut(true);
+    try {
+      if (onLogout) {
+        await onLogout();
+      } else {
+        await logoutFromFirebase();
+      }
+      setAuthenticatedUser(null);
+    } catch (err) {
+      console.error('Sign-out error:', err);
+    } finally {
+      setIsSigningOut(false);
+    }
+  }, [onLogout]);
 
   const handleCopyDomain = async (domainToCopy: string) => {
     try {
@@ -96,16 +115,97 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
       console.warn('Failed to copy domain to clipboard:', err);
     }
   };
+  // 1. AUTHENTICATED PROFILE VIEW (Exact match to ARSCA Profile Welcome Screen)
+  if (authenticatedUser) {
+    const initialLetter = (
+      authenticatedUser.displayName?.trim() ||
+      authenticatedUser.email?.trim() ||
+      'U'
+    ).charAt(0).toUpperCase();
 
-  const handleContinue = () => {
-    setShowSuccessModal(false);
-    if (authenticatedUser) {
-      onLoginSuccess(authenticatedUser);
-    } else {
-      onBack();
-    }
-  };
+    return (
+      <motion.div
+        key="arsca-authenticated-profile-view"
+        initial={{ opacity: 0, y: 8, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.99 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="py-8 sm:py-16 px-4 flex flex-col items-center justify-center min-h-[60vh] w-full transform-gpu"
+      >
+        {/* Authoritative ARSCA Profile Card */}
+        <div className="w-full max-w-[360px] sm:max-w-[380px] bg-white rounded-3xl border border-[#ECE7DE] shadow-[0_12px_32px_rgba(0,0,0,0.05),0_2px_6px_rgba(0,0,0,0.02)] px-7 py-8 sm:py-9 flex flex-col items-center text-center transition-all duration-200">
+          
+          {/* Circular Pale Mint Avatar with overlapping green check badge */}
+          <div className="relative mb-5 flex items-center justify-center">
+            <div className="w-26 h-26 sm:w-28 sm:h-28 rounded-full bg-[#D8F3E5] flex items-center justify-center select-none shadow-xs">
+              <span className="text-3xl sm:text-4xl font-black text-[#081E23] leading-none">
+                {initialLetter}
+              </span>
+            </div>
 
+            {/* Overlapping green checkmark circle badge */}
+            <div
+              className="absolute bottom-0 right-1 w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-[#10B981] flex items-center justify-center shadow-xs border-2 border-white"
+              aria-label="Verified logged in"
+            >
+              <Check className="w-4 h-4 text-white stroke-[3.5]" />
+            </div>
+          </div>
+
+          {/* Heading: Welcome back! */}
+          <h1 className="text-2xl sm:text-[26px] font-black text-[#081E23] tracking-tight leading-tight">
+            Welcome back!
+          </h1>
+
+          {/* User Display Name */}
+          <p className="mt-2 text-base sm:text-lg font-bold text-[#0F201C] leading-snug">
+            {authenticatedUser.displayName || 'Client'}
+          </p>
+
+          {/* User Email */}
+          {authenticatedUser.email && (
+            <p className="mt-0.5 text-sm font-normal text-[#627D82] leading-relaxed">
+              {authenticatedUser.email}
+            </p>
+          )}
+
+          {/* Status Pill: Successfully logged in */}
+          <div className="mt-4 px-5 py-2 rounded-full bg-[#E8F8F0] inline-flex items-center space-x-2 select-none">
+            <span className="w-4 h-4 rounded-full bg-[#10B981] flex items-center justify-center text-white shrink-0">
+              <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+            </span>
+            <span className="text-xs sm:text-[13px] font-semibold text-[#16A34A]">
+              Successfully logged in
+            </span>
+          </div>
+
+          {/* Hairline Horizontal Divider */}
+          <div className="w-full border-t border-[#EFEBE4] my-7" />
+
+          {/* Sign out Button */}
+          <button
+            id="btn-profile-sign-out"
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="w-full py-3.5 px-6 rounded-2xl border border-[#D5CEC2] bg-white hover:bg-[#FAF8F5] active:bg-[#F2ECE1] transition-all duration-150 flex items-center justify-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
+          >
+            {isSigningOut ? (
+              <Loader2 className="w-5 h-5 animate-spin text-[#081E23]" />
+            ) : (
+              <LogOut className="w-5 h-5 text-[#081E23] stroke-[2]" />
+            )}
+            <span className="text-sm sm:text-base font-bold text-[#081E23]">
+              Sign out
+            </span>
+          </button>
+
+        </div>
+      </motion.div>
+    );
+  }
+
+  // 2. UNAUTHENTICATED LOGIN VIEW
   return (
     <motion.div
       key="simple-login-page"
@@ -113,7 +213,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="py-8 sm:py-16 px-4 flex flex-col items-center justify-center min-h-[60vh]"
+      className="py-8 sm:py-16 px-4 flex flex-col items-center justify-center min-h-[60vh] transform-gpu"
     >
       {/* Clean Centered Login Card */}
       <div className={`w-full ${authError?.isUnauthorizedDomain ? 'max-w-md' : 'max-w-sm'} bg-white rounded-2xl border border-[#E2DDD2] shadow-sm p-6 sm:p-8 transition-all duration-200`}>
@@ -269,88 +369,6 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
         </div>
 
       </div>
-
-      {/* Clean Success Popup */}
-      <AnimatePresence>
-        {showSuccessModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#081E23]/60 backdrop-blur-xs"
-              aria-hidden="true"
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="relative w-full max-w-sm bg-white rounded-2xl border border-[#E2DDD2] shadow-xl p-6 text-center z-10 space-y-4"
-              role="dialog"
-              aria-modal="true"
-            >
-              <div className="mx-auto w-12 h-12 rounded-full bg-[#20BA68]/15 text-[#20BA68] flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
-              </div>
-
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-black text-[#0F201C]">
-                  Welcome to ARSCA
-                </h3>
-                <p className="text-xs text-[#5C6E6A] leading-relaxed">
-                  You are successfully signed in.
-                  <br />
-                  Cloud Access will be available from your ARSCA account.
-                </p>
-              </div>
-
-              {authenticatedUser && (
-                <div className="bg-[#F8F6F0] border border-[#E2DDD2] rounded-xl p-3 text-left flex items-center space-x-3">
-                  {authenticatedUser.photoURL ? (
-                    <img
-                      src={authenticatedUser.photoURL}
-                      alt={authenticatedUser.displayName || 'Client'}
-                      referrerPolicy="no-referrer"
-                      className="w-8 h-8 rounded-full object-cover border border-[#E2DDD2] shrink-0"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#20BA68] text-[#081E23] flex items-center justify-center font-bold text-xs shrink-0">
-                      {(authenticatedUser.displayName || authenticatedUser.email || 'C')
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-[#0F201C] truncate">
-                      {authenticatedUser.displayName || 'Client'}
-                    </div>
-                    {authenticatedUser.email && (
-                      <div className="text-[11px] text-[#5C6E6A] truncate">
-                        {authenticatedUser.email}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-2">
-                <button
-                  id="btn-login-success-continue"
-                  type="button"
-                  onClick={handleContinue}
-                  className="w-full py-2.5 px-4 bg-[#20BA68] hover:bg-[#1DA85E] active:bg-[#189452] text-[#081E23] font-black rounded-xl text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 shadow-sm active:scale-[0.99] cursor-pointer"
-                >
-                  CONTINUE
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 });
