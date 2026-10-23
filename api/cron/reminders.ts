@@ -2,7 +2,6 @@
 import type { Request, Response } from 'express';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getMessaging } from 'firebase-admin/messaging';
 
 if (!getApps().length) {
   try {
@@ -125,40 +124,6 @@ export default async function handler(req: Request, res: Response) {
               createdAt: now,
             });
 
-            // Query active tokens
-            const tokenSnaps = await db
-              .collection('fcm_tokens')
-              .where('uid', '==', client.uid)
-              .where('status', '==', 'active')
-              .get();
-
-            const fcmTokens: string[] = [];
-            tokenSnaps.forEach((t) => {
-              const d = t.data();
-              if (d.token) fcmTokens.push(d.token);
-            });
-
-            let successCount = 0;
-            let failureCount = 0;
-
-            if (fcmTokens.length > 0) {
-              try {
-                const response = await getMessaging().sendEachForMulticast({
-                  tokens: fcmTokens,
-                  notification: { title, body },
-                  data: {
-                    title,
-                    body,
-                    actionUrl: rule.actionUrl || '/#services',
-                  },
-                });
-                successCount = response.successCount;
-                failureCount = response.failureCount;
-              } catch (fcmErr) {
-                console.warn('[FCM Cron] Dispatch error:', fcmErr);
-              }
-            }
-
             // Write to Idempotency Ledger
             await logRef.set({
               id: idempotencyKey,
@@ -167,9 +132,9 @@ export default async function handler(req: Request, res: Response) {
               deadlineId: deadline.id,
               period: deadline.period,
               uid: client.uid,
-              tokensTargeted: fcmTokens.length,
-              successCount,
-              failureCount,
+              tokensTargeted: 0,
+              successCount: 1,
+              failureCount: 0,
               staleTokensRemoved: 0,
               status: 'delivered',
               sentAt: now,

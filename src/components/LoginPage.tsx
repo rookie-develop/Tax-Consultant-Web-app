@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, Bell, Send } from 'lucide-react';
+import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import {
   signInWithGooglePopup,
   getAuthErrorDetails,
   AuthErrorInfo,
   getFirebaseEnvDiagnostics,
-  requestPushNotificationToken,
-  PushRegistrationResult,
   getFirebaseAuth,
 } from '../config/firebase';
 
@@ -32,24 +30,6 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
     clientUser || null
   );
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [pushStatus, setPushStatus] = useState<{
-    loading: boolean;
-    result: PushRegistrationResult | null;
-  }>({
-    loading: false,
-    result: null,
-  });
-  const [copiedToken, setCopiedToken] = useState(false);
-  const [copiedUid, setCopiedUid] = useState(false);
-  const [testSendStatus, setTestSendStatus] = useState<{
-    loading: boolean;
-    message: string | null;
-    error: string | null;
-  }>({
-    loading: false,
-    message: null,
-    error: null,
-  });
   const envDiagnostics = React.useMemo(() => getFirebaseEnvDiagnostics(), []);
 
   // Sync authenticated session from props or Firebase Auth
@@ -68,117 +48,6 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
       }
     }
   }, [clientUser]);
-
-  // Restore previously generated device push token if already granted on this device
-  useEffect(() => {
-    try {
-      const cachedToken = localStorage.getItem('arsca_fcm_token');
-      if (cachedToken && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        setPushStatus((prev) => {
-          if (prev.result?.token) return prev;
-          return {
-            loading: false,
-            result: {
-              success: true,
-              token: cachedToken,
-              permission: 'granted',
-              isSupported: true,
-            },
-          };
-        });
-      }
-    } catch {}
-  }, []);
-
-  const handleEnablePushNotifications = async () => {
-    setPushStatus({ loading: true, result: null });
-    setCopiedToken(false);
-    const res = await requestPushNotificationToken();
-    if (res.token) {
-      try {
-        localStorage.setItem('arsca_fcm_token', res.token);
-      } catch {}
-    }
-    setPushStatus({ loading: false, result: res });
-  };
-
-  const handleCopyToken = async (tokenToCopy: string) => {
-    try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(tokenToCopy);
-      }
-      setCopiedToken(true);
-      setTimeout(() => setCopiedToken(false), 2500);
-    } catch (err) {
-      console.warn('Failed to copy token:', err);
-    }
-  };
-
-  const handleCopyUid = async (uidToCopy: string) => {
-    try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(uidToCopy);
-      }
-      setCopiedUid(true);
-      setTimeout(() => setCopiedUid(false), 2500);
-    } catch (err) {
-      console.warn('Failed to copy UID:', err);
-    }
-  };
-
-  const activeUser = authenticatedUser || clientUser || (typeof window !== 'undefined' ? getFirebaseAuth().currentUser : null);
-  const activeToken = pushStatus.result?.token || (typeof window !== 'undefined' ? localStorage.getItem('arsca_fcm_token') || '' : '');
-  const hasActiveUser = Boolean(activeUser && activeUser.uid);
-  const hasValidToken = Boolean(activeToken && activeToken.trim().length > 20);
-
-  const handleSendTestNotification = async () => {
-    const targetToken = activeToken;
-    if (!targetToken) {
-      setTestSendStatus({
-        loading: false,
-        message: null,
-        error: 'No registered device token available. Please enable alerts above.',
-      });
-      return;
-    }
-    setTestSendStatus({ loading: true, message: null, error: null });
-    try {
-      const auth = getFirebaseAuth();
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error('Please sign in with Google first.');
-      }
-
-      const idToken = await currentUser.getIdToken();
-      const response = await fetch('/api/test-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ token: targetToken }),
-      });
-
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) {
-        const errorKey = data?.error || `HTTP_${response.status}`;
-        throw new Error(errorKey);
-      }
-
-      setTestSendStatus({
-        loading: false,
-        message: `Test notification sent! Message ID: ${data.messageId}`,
-        error: null,
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setTestSendStatus({
-        loading: false,
-        message: null,
-        error: msg,
-      });
-    }
-  };
 
   useEffect(() => {
     console.log('[Firebase Environment Variables Diagnostic]');
@@ -399,161 +268,6 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           </button>
         </div>
 
-        {/* Client Tax Deadline Push Notifications Opt-In (Phase 1) */}
-        <div className="mt-5 pt-4 border-t border-[#E8E3D9] text-left space-y-2.5">
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded-md bg-[#E8F8EE] flex items-center justify-center text-[#20BA68] shrink-0">
-              <Bell className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-[#0F201C]">
-                Tax Deadline Alerts
-              </h3>
-              <p className="text-[10.5px] text-[#5C6E6A]">
-                Receive statutory filing due-date reminders on this device.
-              </p>
-            </div>
-          </div>
-
-          <button
-            id="btn-enable-push-notifications"
-            type="button"
-            onClick={handleEnablePushNotifications}
-            disabled={pushStatus.loading}
-            className="w-full py-2.5 px-3 bg-[#FAF8F5] hover:bg-[#F2ECE1] active:bg-[#ECE5D8] text-[#0F201C] font-bold rounded-xl border border-[#D5CEC2] text-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed touch-manipulation"
-          >
-            {pushStatus.loading ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#20BA68]" />
-                <span>Requesting device permission...</span>
-              </>
-            ) : (pushStatus.result?.success || hasValidToken) ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#20BA68]" />
-                <span>Alerts Active (Click to refresh token)</span>
-              </>
-            ) : (
-              <>
-                <Bell className="w-3.5 h-3.5 text-[#20BA68]" />
-                <span>Enable Push Alerts on this Device</span>
-              </>
-            )}
-          </button>
-
-          {/* Feedback & Token Preview */}
-          {(pushStatus.result || hasValidToken) && (
-            <div
-              className={`p-2.5 rounded-xl text-xs space-y-1.5 ${
-                (pushStatus.result?.success || hasValidToken)
-                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-950'
-                  : 'bg-amber-50 border border-amber-200 text-amber-950'
-              }`}
-            >
-              <div className="flex items-start space-x-2">
-                {(pushStatus.result?.success || hasValidToken) ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                )}
-                <div className="font-semibold text-[11px] leading-tight">
-                  {(pushStatus.result?.success || hasValidToken)
-                    ? 'Device registered for tax deadline notifications.'
-                    : pushStatus.result?.error || 'Notification setup could not be completed.'}
-                </div>
-              </div>
-
-              {hasValidToken && (
-                <div className="pt-0.5">
-                  <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-lg px-2 py-1 font-mono text-[10px] text-emerald-950">
-                    <span className="truncate mr-2 font-mono">
-                      {activeToken.slice(0, 16)}...{activeToken.slice(-10)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyToken(activeToken)}
-                      className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition-colors cursor-pointer"
-                    >
-                      {copiedToken ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Test Dispatch Controls (Authenticated Test Session Only) */}
-          {hasActiveUser && activeUser && (
-            <div className="pt-2 space-y-2 border-t border-[#E8E3D9]">
-              {/* Account UID Display for TEST_ADMIN_UIDS Setup */}
-              <div className="bg-[#FAF8F5] border border-[#E2DDD2] rounded-lg p-2 text-left space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#5C6E6A] uppercase tracking-wider">
-                    Your Firebase UID (for TEST_ADMIN_UIDS)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyUid(activeUser.uid)}
-                    className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-[#E8F8EE] text-[#0E9355] text-[10px] font-bold hover:bg-[#D5F3E4] transition-colors cursor-pointer"
-                  >
-                    {copiedUid ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
-                    <span>{copiedUid ? 'Copied' : 'Copy UID'}</span>
-                  </button>
-                </div>
-                <div className="font-mono text-[10.5px] text-[#0F201C] select-all truncate">
-                  {activeUser.uid}
-                </div>
-              </div>
-
-              {/* Single-Target Test Dispatch Button */}
-              {hasValidToken ? (
-                <div className="space-y-1.5">
-                  <button
-                    id="btn-send-test-push"
-                    type="button"
-                    onClick={handleSendTestNotification}
-                    disabled={testSendStatus.loading}
-                    className="w-full py-2 px-3 bg-[#081E23] hover:bg-[#20BA68] active:bg-[#189452] text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed touch-manipulation"
-                  >
-                    {testSendStatus.loading ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#20BA68]" />
-                        <span>Verifying with server & sending...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5 text-[#20BA68]" />
-                        <span>Send Test Alert to this Device</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Test Send Feedback */}
-                  {testSendStatus.message && (
-                    <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs flex items-start space-x-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <div className="font-semibold text-[10.5px] leading-tight">
-                        {testSendStatus.message}
-                      </div>
-                    </div>
-                  )}
-
-                  {testSendStatus.error && (
-                    <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-950 text-xs flex items-start space-x-2">
-                      <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 mt-0.5" />
-                      <div className="font-semibold text-[10.5px] leading-tight">
-                        Error: {testSendStatus.error}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-[10px] text-[#889B96] italic text-center">
-                  Enable alerts above to generate a device token for test dispatch.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Clean Success Popup */}
