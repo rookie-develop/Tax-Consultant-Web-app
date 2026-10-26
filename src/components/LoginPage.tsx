@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, LogOut } from 'lucide-react';
+import { Loader2, CheckCircle2, Copy, Check, ExternalLink, AlertCircle, LogOut, ShieldAlert, Trash2 } from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
+import { ACCOUNT_DELETION_FORM_URL } from '../data/servicesData';
 import {
   signInWithGooglePopup,
   logoutFromFirebase,
@@ -17,6 +18,7 @@ interface LoginPageProps {
   onBack: () => void;
   onLoginSuccess: (user: ClientUser) => void;
   onLogout?: () => void;
+  onRequestDeleteAccount?: () => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = React.memo(({
@@ -25,11 +27,13 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
   onBack,
   onLoginSuccess,
   onLogout,
+  onRequestDeleteAccount,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
+  const [showDeletionInfo, setShowDeletionInfo] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<ClientUser | null>(
     clientUser || null
   );
@@ -200,6 +204,59 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
             </span>
           </button>
 
+          {/* Account Deletion Area */}
+          <div className="w-full mt-4 pt-3 border-t border-[#F2ECE1]">
+            <button
+              id="btn-profile-toggle-deletion"
+              type="button"
+              onClick={() => setShowDeletionInfo(!showDeletionInfo)}
+              className="w-full py-2 px-3 rounded-xl text-xs font-semibold text-[#627D82] hover:text-[#081E23] hover:bg-[#FAF8F5] transition-colors flex items-center justify-center space-x-1.5 cursor-pointer touch-manipulation"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-[#889B96]" />
+              <span>Request Account Deletion</span>
+            </button>
+
+            <AnimatePresence>
+              {showDeletionInfo && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -4 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="mt-3 p-4 rounded-2xl bg-[#FAF8F5] border border-[#E2DDD2] text-left space-y-3 overflow-hidden"
+                >
+                  <div className="flex items-center space-x-2">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                    <h3 className="text-xs sm:text-sm font-bold text-[#081E23]">
+                      Request Account Deletion
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-[#4A5D58] leading-relaxed">
+                    You can submit a request to delete your ARSCA Tax Consultant app account and associated app data. After verifying your request, ARSCA aims to complete the deletion within 24–48 hours. You will receive a confirmation email at your verified account email address once deletion is completed.
+                  </p>
+
+                  <p className="text-[11px] text-[#7F9D97] leading-relaxed">
+                    Certain tax or business records may need to be retained where required by law. This request deletes your ARSCA app account, not your Google Account.
+                  </p>
+
+                  <div className="pt-1">
+                    <a
+                      id="btn-profile-submit-deletion"
+                      href={ACCOUNT_DELETION_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#081E23] hover:bg-[#0A262D] active:bg-[#040E10] text-white text-xs font-bold inline-flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                    >
+                      <span>Submit Deletion Request</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-[#20BA68]" />
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
         </div>
       </motion.div>
     );
@@ -366,6 +423,50 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
           >
             Cancel
           </button>
+        </div>
+
+        {/* Public Account Deletion Link */}
+        <div className="mt-5 pt-4 border-t border-[#EFEBE4] text-center">
+          <button
+            id="btn-login-request-account-deletion"
+            type="button"
+            onClick={onRequestDeleteAccount || (() => setShowDeletionInfo(!showDeletionInfo))}
+            className="text-[11px] font-semibold text-[#5C6E6A] hover:text-[#081E23] transition-colors cursor-pointer inline-flex items-center space-x-1"
+          >
+            <span>Need to delete your account?</span>
+            <span className="text-[#20BA68] hover:underline font-bold">Request Deletion</span>
+          </button>
+
+          <AnimatePresence>
+            {!onRequestDeleteAccount && showDeletionInfo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 p-3.5 rounded-xl bg-[#FAF8F5] border border-[#E2DDD2] text-left space-y-2.5 text-xs text-[#4A5D58]"
+              >
+                <div className="font-bold text-[#081E23] flex items-center space-x-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Request Account Deletion</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  You can submit a request to delete your ARSCA Tax Consultant app account and associated app data. After verifying your request, ARSCA aims to complete the deletion within 24–48 hours. You will receive a confirmation email at your verified account email address once deletion is completed.
+                </p>
+                <p className="text-[10px] text-[#7F9D97]">
+                  Certain tax or business records may need to be retained where required by law. This request deletes your ARSCA app account, not your Google Account.
+                </p>
+                <a
+                  href={ACCOUNT_DELETION_FORM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2 px-3 rounded-lg bg-[#081E23] hover:bg-[#0A262D] text-white text-[11px] font-bold inline-flex items-center justify-center space-x-1.5"
+                >
+                  <span>Submit Deletion Request</span>
+                  <ExternalLink className="w-3 h-3 text-[#20BA68]" />
+                </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
       </div>

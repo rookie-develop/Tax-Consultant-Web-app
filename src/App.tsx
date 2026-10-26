@@ -42,6 +42,15 @@ const ComplaintPage = lazy(() =>
 const ChannelsPage = lazy(() =>
   import('./components/ChannelsPage').then((m) => ({ default: m.ChannelsPage }))
 );
+const PrivacyPolicyPage = lazy(() =>
+  import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+);
+const DataSafetyPage = lazy(() =>
+  import('./components/DataSafetyPage').then((m) => ({ default: m.DataSafetyPage }))
+);
+const DeleteAccountView = lazy(() =>
+  import('./components/DeleteAccountView').then((m) => ({ default: m.DeleteAccountView }))
+);
 const CloudAccessModal = lazy(() =>
   import('./components/CloudAccessModal').then((m) => ({ default: m.CloudAccessModal }))
 );
@@ -73,12 +82,26 @@ export default function App() {
   // Step 1: No category selected (shows all categories)
   // Step 2: Category selected, but no sub-service selected (shows sub-services)
   // Step 3: Sub-service selected (shows WhatsApp request generator)
+  // Initial routing detection from pathname and hash
+  const rawPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const initialPath = rawPath.replace(/\/$/, '') || '/';
+  const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
+
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [isLoginPageOpen, setIsLoginPageOpen] = useState(false);
-  const [isComplaintPageOpen, setIsComplaintPageOpen] = useState(false);
-  const [isChannelsPageOpen, setIsChannelsPageOpen] = useState(false);
+  const [isLoginPageOpen, setIsLoginPageOpen] = useState(initialHash === '#login');
+  const [isComplaintPageOpen, setIsComplaintPageOpen] = useState(initialHash === '#complaint');
+  const [isChannelsPageOpen, setIsChannelsPageOpen] = useState(initialHash === '#channels');
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(
+    initialPath === '/privacy-policy' || initialHash === '#privacy-policy'
+  );
+  const [isDataSafetyOpen, setIsDataSafetyOpen] = useState(
+    initialPath === '/data-safety' || initialHash === '#data-safety'
+  );
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(
+    initialPath === '/delete-account' || initialHash === '#delete-account'
+  );
   const [comingSoonFeature, setComingSoonFeature] = useState<'Community' | 'Channels' | null>(null);
   const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | 'My Requests' | null>(null);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -103,26 +126,62 @@ export default function App() {
     };
   }, []);
 
-  // Listen to browser back/forward buttons and URL hash
+  // Listen to browser back/forward buttons, URL path, and URL hash
   useEffect(() => {
     const handlePopState = () => {
       const hash = window.location.hash;
-      if (hash === '#complaint') {
+      const rawCurrentPath = window.location.pathname || '';
+      const path = rawCurrentPath.replace(/\/$/, '') || '/';
+
+      if (path === '/privacy-policy' || hash === '#privacy-policy') {
+        setIsPrivacyPolicyOpen(true);
+        setIsDataSafetyOpen(false);
+        setIsDeleteAccountOpen(false);
+        setIsComplaintPageOpen(false);
+        setIsChannelsPageOpen(false);
+        setIsLoginPageOpen(false);
+      } else if (path === '/data-safety' || hash === '#data-safety') {
+        setIsDataSafetyOpen(true);
+        setIsPrivacyPolicyOpen(false);
+        setIsDeleteAccountOpen(false);
+        setIsComplaintPageOpen(false);
+        setIsChannelsPageOpen(false);
+        setIsLoginPageOpen(false);
+      } else if (path === '/delete-account' || hash === '#delete-account') {
+        setIsDeleteAccountOpen(true);
+        setIsPrivacyPolicyOpen(false);
+        setIsDataSafetyOpen(false);
+        setIsComplaintPageOpen(false);
+        setIsChannelsPageOpen(false);
+        setIsLoginPageOpen(false);
+      } else if (hash === '#complaint') {
         setIsComplaintPageOpen(true);
         setIsChannelsPageOpen(false);
         setIsLoginPageOpen(false);
+        setIsPrivacyPolicyOpen(false);
+        setIsDataSafetyOpen(false);
+        setIsDeleteAccountOpen(false);
       } else if (hash === '#channels') {
         setIsChannelsPageOpen(true);
         setIsComplaintPageOpen(false);
         setIsLoginPageOpen(false);
+        setIsPrivacyPolicyOpen(false);
+        setIsDataSafetyOpen(false);
+        setIsDeleteAccountOpen(false);
       } else if (hash === '#login') {
         setIsLoginPageOpen(true);
         setIsChannelsPageOpen(false);
         setIsComplaintPageOpen(false);
+        setIsPrivacyPolicyOpen(false);
+        setIsDataSafetyOpen(false);
+        setIsDeleteAccountOpen(false);
       } else {
         setIsComplaintPageOpen(false);
         setIsChannelsPageOpen(false);
         setIsLoginPageOpen(false);
+        setIsPrivacyPolicyOpen(false);
+        setIsDataSafetyOpen(false);
+        setIsDeleteAccountOpen(false);
       }
     };
 
@@ -168,11 +227,14 @@ export default function App() {
     setIsLoginPageOpen(false);
     setIsComplaintPageOpen(false);
     setIsChannelsPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsDeleteAccountOpen(false);
     setSelectedCategory(null);
     setSelectedSubService(null);
     setIsMobileSearchOpen(false);
-    if (window.location.hash) {
-      window.history.pushState(null, '', window.location.pathname);
+    if (window.location.pathname !== '/' || window.location.hash) {
+      window.history.pushState(null, '', '/');
     }
     scrollToTop();
   }, []);
@@ -301,6 +363,88 @@ export default function App() {
     scrollToTop();
   }, []);
 
+  const handleOpenPrivacyPolicy = useCallback(() => {
+    setModalFeature(null);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsLoginPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsPrivacyPolicyOpen(true);
+    if (window.location.pathname !== '/privacy-policy') {
+      window.history.pushState({ page: 'privacy-policy' }, '', '/privacy-policy');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleBackFromPrivacyPolicy = useCallback(() => {
+    setIsPrivacyPolicyOpen(false);
+    if (window.location.pathname === '/privacy-policy' || window.location.hash === '#privacy-policy') {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, '', '/');
+      }
+    }
+    scrollToTop();
+  }, []);
+
+  const handleOpenDataSafety = useCallback(() => {
+    setModalFeature(null);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsLoginPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(true);
+    if (window.location.pathname !== '/data-safety') {
+      window.history.pushState({ page: 'data-safety' }, '', '/data-safety');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleBackFromDataSafety = useCallback(() => {
+    setIsDataSafetyOpen(false);
+    if (window.location.pathname === '/data-safety' || window.location.hash === '#data-safety') {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, '', '/');
+      }
+    }
+    scrollToTop();
+  }, []);
+
+  const handleOpenDeleteAccount = useCallback(() => {
+    setModalFeature(null);
+    setCloudModalType(null);
+    setComingSoonFeature(null);
+    setIsLoginPageOpen(false);
+    setIsChannelsPageOpen(false);
+    setIsComplaintPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsDeleteAccountOpen(true);
+    if (window.location.pathname !== '/delete-account') {
+      window.history.pushState({ page: 'delete-account' }, '', '/delete-account');
+    }
+    scrollToTop();
+  }, []);
+
+  const handleBackFromDeleteAccount = useCallback(() => {
+    setIsDeleteAccountOpen(false);
+    if (window.location.pathname === '/delete-account' || window.location.hash === '#delete-account') {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, '', '/');
+      }
+    }
+    scrollToTop();
+  }, []);
+
   const handleSelectCommunity = useCallback(() => {
     setComingSoonFeature('Community');
   }, []);
@@ -332,6 +476,9 @@ export default function App() {
     setModalFeature(null);
     setIsComplaintPageOpen(false);
     setIsChannelsPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsDeleteAccountOpen(false);
     setCloudModalType(null);
     setComingSoonFeature(null);
     setIsNotificationModalOpen(false);
@@ -342,6 +489,9 @@ export default function App() {
   const handleBottomSelectRequests = useCallback(() => {
     setIsComplaintPageOpen(false);
     setIsChannelsPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsDeleteAccountOpen(false);
     setCloudModalType(null);
     setComingSoonFeature(null);
     setIsNotificationModalOpen(false);
@@ -353,6 +503,9 @@ export default function App() {
     setModalFeature(null);
     setIsComplaintPageOpen(false);
     setIsChannelsPageOpen(false);
+    setIsPrivacyPolicyOpen(false);
+    setIsDataSafetyOpen(false);
+    setIsDeleteAccountOpen(false);
     setCloudModalType(null);
     setComingSoonFeature(null);
     setIsNotificationModalOpen(false);
@@ -368,13 +521,16 @@ export default function App() {
         onOpenModal={handleOpenModalFeature}
         onOpenComplaint={handleOpenComplaint}
         onOpenChannels={handleOpenChannels}
+        onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
+        onOpenDataSafety={handleOpenDataSafety}
+        onOpenDeleteAccount={handleOpenDeleteAccount}
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
         onLogout={handleLogout}
       />
 
       {/* HOME PAGE HEADER: Greeting, Heading, Rounded Search Bar */}
-      {currentStep === 1 && !isLoginPageOpen && !isComplaintPageOpen && !isChannelsPageOpen && (
+      {currentStep === 1 && !isLoginPageOpen && !isComplaintPageOpen && !isChannelsPageOpen && !isPrivacyPolicyOpen && !isDataSafetyOpen && !isDeleteAccountOpen && (
         <section className="bg-[#081E23] text-white border-b border-[#0F2D33] px-3.5 sm:px-6 lg:px-8 pt-4 pb-6 sm:pb-8 shadow-sm">
           <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4">
             {/* Greeting */}
@@ -422,6 +578,7 @@ export default function App() {
                 onBack={handleCloseLogin}
                 onLoginSuccess={handleLoginSuccess}
                 onLogout={handleLogout}
+                onRequestDeleteAccount={handleOpenDeleteAccount}
               />
             </Suspense>
           ) : isComplaintPageOpen ? (
@@ -450,6 +607,54 @@ export default function App() {
               <ChannelsPage
                 key="channels-page-view"
                 config={config}
+              />
+            </Suspense>
+          ) : isPrivacyPolicyOpen ? (
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <PrivacyPolicyPage
+                key="privacy-policy-view"
+                config={config}
+                onBack={handleBackFromPrivacyPolicy}
+                onNavigateToDataSafety={handleOpenDataSafety}
+                onNavigateToDeleteAccount={handleOpenDeleteAccount}
+              />
+            </Suspense>
+          ) : isDataSafetyOpen ? (
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <DataSafetyPage
+                key="data-safety-view"
+                config={config}
+                onBack={handleBackFromDataSafety}
+                onNavigateToPrivacyPolicy={handleOpenPrivacyPolicy}
+                onNavigateToDeleteAccount={handleOpenDeleteAccount}
+              />
+            </Suspense>
+          ) : isDeleteAccountOpen ? (
+            <Suspense
+              fallback={
+                <div className="py-16 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#23A87B] border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <DeleteAccountView
+                key="delete-account-view"
+                config={config}
+                onBack={handleBackFromDeleteAccount}
+                onNavigateToPrivacyPolicy={handleOpenPrivacyPolicy}
+                onNavigateToDataSafety={handleOpenDataSafety}
               />
             </Suspense>
           ) : (
@@ -573,6 +778,9 @@ export default function App() {
         onOpenModal={handleOpenModalFeature}
         onOpenComplaint={handleOpenComplaint}
         onOpenChannels={handleOpenChannels}
+        onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
+        onOpenDataSafety={handleOpenDataSafety}
+        onOpenDeleteAccount={handleOpenDeleteAccount}
       />
 
       {/* Cloud Access Authentication/Link Modals */}

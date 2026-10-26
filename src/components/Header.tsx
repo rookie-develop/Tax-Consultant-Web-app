@@ -1,6 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, Clock, LogIn, Mail, Radio, Cloud, User, Bell, ShieldCheck } from 'lucide-react';
+import {
+  MessageCircle,
+  Clock,
+  LogIn,
+  Mail,
+  Radio,
+  Cloud,
+  User,
+  Bell,
+  ShieldCheck,
+  Shield,
+  ShieldAlert,
+  ChevronDown,
+} from 'lucide-react';
 import { AppConfig, ClientUser } from '../types';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
 
@@ -10,6 +23,9 @@ interface HeaderProps {
   onOpenModal: (feature: 'Login' | 'Cloud Access') => void;
   onOpenComplaint: () => void;
   onOpenChannels?: () => void;
+  onOpenPrivacyPolicy?: () => void;
+  onOpenDataSafety?: () => void;
+  onOpenDeleteAccount?: () => void;
   clientUser?: ClientUser | null;
   onOpenLogin: () => void;
   onLogout?: () => void;
@@ -21,11 +37,34 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   onOpenModal,
   onOpenComplaint,
   onOpenChannels,
+  onOpenPrivacyPolicy,
+  onOpenDataSafety,
+  onOpenDeleteAccount,
   clientUser,
   onOpenLogin,
   onLogout,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
+  const privacyDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close desktop privacy dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        privacyDropdownRef.current &&
+        !privacyDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsPrivacyDropdownOpen(false);
+      }
+    };
+    if (isPrivacyDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isPrivacyDropdownOpen]);
 
   const directWaUrl = React.useMemo(
     () =>
@@ -100,6 +139,112 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               <Cloud className="w-3.5 h-3.5 text-[#20BA68]" />
               <span>Cloud Access</span>
             </button>
+
+            {/* Desktop Privacy & Safety Dropdown */}
+            {(onOpenPrivacyPolicy || onOpenDataSafety || onOpenDeleteAccount) && (
+              <div className="relative" ref={privacyDropdownRef}>
+                <button
+                  id="header-nav-privacy-safety"
+                  type="button"
+                  onClick={() => setIsPrivacyDropdownOpen(!isPrivacyDropdownOpen)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsPrivacyDropdownOpen(false);
+                  }}
+                  className={`text-white/80 hover:text-white transition-colors py-2 px-2.5 rounded-lg hover:bg-white/10 inline-flex items-center space-x-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68] ${
+                    isPrivacyDropdownOpen ? 'bg-white/10 text-white' : ''
+                  }`}
+                  aria-expanded={isPrivacyDropdownOpen}
+                  aria-haspopup="true"
+                  aria-label="Privacy & Data Safety Menu"
+                >
+                  <Shield className="w-3.5 h-3.5 text-[#20BA68]" />
+                  <span>Privacy & Safety</span>
+                  <ChevronDown
+                    className={`w-3 h-3 text-white/60 transition-transform duration-200 ${
+                      isPrivacyDropdownOpen ? 'rotate-180 text-white' : ''
+                    }`}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {isPrivacyDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-64 bg-[#0A262D] border border-[#16444E] rounded-2xl shadow-2xl p-1.5 z-50 text-left space-y-1"
+                    >
+                      {onOpenPrivacyPolicy && (
+                        <button
+                          id="desktop-dropdown-privacy-policy"
+                          type="button"
+                          onClick={() => {
+                            setIsPrivacyDropdownOpen(false);
+                            onOpenPrivacyPolicy();
+                          }}
+                          className="w-full flex items-center space-x-2.5 p-2 rounded-xl hover:bg-white/10 text-white transition-colors text-xs font-semibold cursor-pointer text-left focus-visible:outline-none focus-visible:bg-white/15"
+                        >
+                          <div className="w-6 h-6 rounded-lg bg-[#20BA68]/15 flex items-center justify-center shrink-0">
+                            <Shield className="w-3.5 h-3.5 text-[#20BA68]" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white">Privacy Policy</span>
+                            <span className="text-[10px] text-[#88A9A2] font-normal leading-tight">
+                              Client data confidentiality & handling
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      {onOpenDataSafety && (
+                        <button
+                          id="desktop-dropdown-data-safety"
+                          type="button"
+                          onClick={() => {
+                            setIsPrivacyDropdownOpen(false);
+                            onOpenDataSafety();
+                          }}
+                          className="w-full flex items-center space-x-2.5 p-2 rounded-xl hover:bg-white/10 text-white transition-colors text-xs font-semibold cursor-pointer text-left focus-visible:outline-none focus-visible:bg-white/15"
+                        >
+                          <div className="w-6 h-6 rounded-lg bg-[#20BA68]/15 flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#20BA68]" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white">Data Privacy / Safety</span>
+                            <span className="text-[10px] text-[#88A9A2] font-normal leading-tight">
+                              Collection, storage & encryption practices
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      {onOpenDeleteAccount && (
+                        <button
+                          id="desktop-dropdown-delete-account"
+                          type="button"
+                          onClick={() => {
+                            setIsPrivacyDropdownOpen(false);
+                            onOpenDeleteAccount();
+                          }}
+                          className="w-full flex items-center space-x-2.5 p-2 rounded-xl hover:bg-white/10 text-white transition-colors text-xs font-semibold cursor-pointer text-left border-t border-[#16444E] pt-2 focus-visible:outline-none focus-visible:bg-white/15"
+                        >
+                          <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white">Request Account Deletion</span>
+                            <span className="text-[10px] text-[#88A9A2] font-normal leading-tight">
+                              Official Google Form submission (24–48h)
+                            </span>
+                          </div>
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {clientUser ? (
               <div className="flex items-center space-x-2 py-1 px-2.5 rounded-lg bg-white/10 text-white text-xs">
@@ -245,6 +390,54 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 <Mail className="w-4 h-4 text-[#20BA68] shrink-0" />
                 <span className="font-semibold text-xs text-white">Complaint</span>
               </button>
+
+              {/* Privacy Policy Menu Item */}
+              {onOpenPrivacyPolicy && (
+                <button
+                  id="menu-item-privacy-policy"
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenPrivacyPolicy();
+                  }}
+                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
+                >
+                  <Shield className="w-4 h-4 text-[#20BA68] shrink-0" />
+                  <span className="font-semibold text-xs text-white">Privacy Policy</span>
+                </button>
+              )}
+
+              {/* Data Safety Menu Item */}
+              {onOpenDataSafety && (
+                <button
+                  id="menu-item-data-safety"
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenDataSafety();
+                  }}
+                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
+                >
+                  <ShieldCheck className="w-4 h-4 text-[#20BA68] shrink-0" />
+                  <span className="font-semibold text-xs text-white">Data Safety</span>
+                </button>
+              )}
+
+              {/* Account Deletion Menu Item */}
+              {onOpenDeleteAccount && (
+                <button
+                  id="menu-item-delete-account"
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenDeleteAccount();
+                  }}
+                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
+                >
+                  <ShieldAlert className="w-4 h-4 text-[#20BA68] shrink-0" />
+                  <span className="font-semibold text-xs text-white">Request Deletion</span>
+                </button>
+              )}
 
               <div className="flex items-center justify-between pt-1 border-t border-[#0F2D33] text-[11px] text-[#88A9A2]">
                 <span className="flex items-center space-x-1.5">

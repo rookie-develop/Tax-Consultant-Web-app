@@ -1,5 +1,7 @@
 import { AppConfig, ServiceCategory } from '../types';
 
+export const ACCOUNT_DELETION_FORM_URL = 'https://forms.gle/K1XBbVN9nX7HAkm66';
+
 export const DEFAULT_CONFIG: AppConfig = {
   firmName: 'ARSCA',
   firmSubtitle: 'Tax Consultant & Compliance Advisory',
