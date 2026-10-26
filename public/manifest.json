@@ -1,28 +1,44 @@
 {
-  "background_color": "#f4f0e8",
-  "description": "Simple and professional tax compliance service portal for ARSCA Tax Consultants. Select any service and generate an instant pre-filled WhatsApp request.",
-  "dir": "ltr",
-  "display": "standalone",
+  "id": "/",
   "name": "ARSCA Tax Consultant",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "ARSCA",
+  "description": "Simple and professional tax compliance service portal for ARSCA Tax Consultants. Select any service and generate an instant pre-filled WhatsApp request.",
   "start_url": "/",
-  "theme_color": "#23a87b",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "background_color": "#F4F0E8",
+  "theme_color": "#081E23",
   "categories": [
     "finance",
-    "government"
+    "business"
   ],
- "icons": [
-  {
-    "src": "/icons/launchericon-192x192.png",
-    "sizes": "192x192",
-    "type": "image/png"
-  },
-  {
-    "src": "/icons/launchericon-512x512.png",
-    "sizes": "512x512",
-    "type": "image/png"
-  }
-]
+  "icons": [
+    {
+      "src": "/icons/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/launchericon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/launchericon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
