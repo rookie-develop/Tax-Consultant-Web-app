@@ -51,7 +51,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
   return (
     <footer
       id="app-footer"
-      className="mt-12 sm:mt-16 bg-[#081E23] text-[#88A9A2] border-t border-[#0F2D33] text-xs pb-28 lg:pb-10"
+      className="hidden lg:block mt-16 bg-[#081E23] text-[#88A9A2] border-t border-[#0F2D33] text-xs"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8 pb-8 border-b border-[#0F2D33]">
