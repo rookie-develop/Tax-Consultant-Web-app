@@ -59,6 +59,12 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
         shortDesc: 'For late filing or corrections',
         keyHighlights: ['Updated Return (ITR-U) Filing', 'Omitted Income Rectification', 'Penalty Minimization'],
       },
+      {
+        id: 'tax-planning-consultation',
+        title: 'Tax Planning & Consultation',
+        shortDesc: 'For personalized tax saving & consultation',
+        keyHighlights: ['Tax Minimization Strategies', 'Advance Tax Calculations', 'Deduction & Exemption Planning'],
+      },
     ],
   },
   {

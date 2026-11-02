@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldAlert,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   HelpCircle,
   FileCheck2,
@@ -703,16 +704,17 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleGoToStep1}
-                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#23A87B] hover:text-[#081E23] transition-colors cursor-pointer bg-white border border-[#E2DDD2] px-3 py-1.5 rounded-lg shadow-xs"
+                      className="inline-flex items-center space-x-1.5 text-xs sm:text-[13px] font-bold text-[#0D6B4A] bg-[#E8F8F0] border border-[#D2EFE2] hover:bg-[#DCF5EB] px-3.5 py-2 rounded-xl transition-colors cursor-pointer shadow-2xs"
                     >
-                      <span>← Back to Services</span>
+                      <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0D6B4A] stroke-[2.5]" />
+                      <span>Back to Services</span>
                     </button>
-                    <span className="text-xs font-bold text-[#5C6E6A]">
+                    <span className="text-sm sm:text-base font-extrabold text-[#081E23] tracking-tight">
                       {selectedCategory.title}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
                     {selectedCategory.subServices.map((sub) => (
                       <SubServiceCard
                         key={sub.id}
@@ -740,11 +742,12 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleGoToStep2}
-                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#23A87B] hover:text-[#081E23] transition-colors cursor-pointer bg-white border border-[#E2DDD2] px-3 py-1.5 rounded-lg shadow-xs"
+                      className="inline-flex items-center space-x-1.5 text-xs sm:text-[13px] font-bold text-[#0D6B4A] bg-[#E8F8F0] border border-[#D2EFE2] hover:bg-[#DCF5EB] px-3.5 py-2 rounded-xl transition-colors cursor-pointer shadow-2xs"
                     >
-                      <span>← Back to {selectedCategory.title}</span>
+                      <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0D6B4A] stroke-[2.5]" />
+                      <span>Back to {selectedCategory.title}</span>
                     </button>
-                    <span className="text-xs font-bold text-[#5C6E6A] truncate max-w-[200px]">
+                    <span className="text-xs sm:text-sm font-bold text-[#081E23] truncate max-w-[180px] sm:max-w-[240px]">
                       {selectedSubService.title}
                     </span>
                   </div>

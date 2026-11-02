@@ -377,67 +377,78 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 </div>
               )}
 
-              {/* Complaint Menu Item */}
-              <button
-                id="menu-item-complaint"
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  onOpenComplaint();
-                }}
-                className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
-              >
-                <Mail className="w-4 h-4 text-[#20BA68] shrink-0" />
-                <span className="font-semibold text-xs text-white">Complaint</span>
-              </button>
-
-              {/* Privacy Policy Menu Item */}
-              {onOpenPrivacyPolicy && (
+              {/* 2-Column Grid for Menu Items */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                {/* Complaint Menu Item */}
                 <button
-                  id="menu-item-privacy-policy"
+                  id="menu-item-complaint"
                   type="button"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    onOpenPrivacyPolicy();
+                    onOpenComplaint();
                   }}
-                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
+                  className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
                 >
-                  <Shield className="w-4 h-4 text-[#20BA68] shrink-0" />
-                  <span className="font-semibold text-xs text-white">Privacy Policy</span>
+                  <Mail className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
+                  <span className="font-semibold text-xs sm:text-[13px] text-white leading-tight">
+                    Complaint
+                  </span>
                 </button>
-              )}
 
-              {/* Data Safety Menu Item */}
-              {onOpenDataSafety && (
-                <button
-                  id="menu-item-data-safety"
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenDataSafety();
-                  }}
-                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#20BA68] shrink-0" />
-                  <span className="font-semibold text-xs text-white">Data Safety</span>
-                </button>
-              )}
+                {/* Privacy Policy Menu Item */}
+                {onOpenPrivacyPolicy && (
+                  <button
+                    id="menu-item-privacy-policy"
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenPrivacyPolicy();
+                    }}
+                    className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
+                  >
+                    <Shield className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
+                    <span className="font-semibold text-xs sm:text-[13px] text-white leading-tight">
+                      Privacy Policy
+                    </span>
+                  </button>
+                )}
 
-              {/* Account Deletion Menu Item */}
-              {onOpenDeleteAccount && (
-                <button
-                  id="menu-item-delete-account"
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenDeleteAccount();
-                  }}
-                  className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white transition-colors cursor-pointer text-left w-full"
-                >
-                  <ShieldAlert className="w-4 h-4 text-[#20BA68] shrink-0" />
-                  <span className="font-semibold text-xs text-white">Request Deletion</span>
-                </button>
-              )}
+                {/* Data Safety Menu Item */}
+                {onOpenDataSafety && (
+                  <button
+                    id="menu-item-data-safety"
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenDataSafety();
+                    }}
+                    className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
+                  >
+                    <ShieldCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
+                    <span className="font-semibold text-xs sm:text-[13px] text-white leading-tight">
+                      Data Safety
+                    </span>
+                  </button>
+                )}
+
+                {/* Account Deletion Menu Item */}
+                {onOpenDeleteAccount && (
+                  <button
+                    id="menu-item-delete-account"
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenDeleteAccount();
+                    }}
+                    className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-[#20BA68] shrink-0 stroke-[2]" />
+                    <span className="font-semibold text-xs sm:text-[13px] text-white leading-tight">
+                      Request Deletion
+                    </span>
+                  </button>
+                )}
+              </div>
 
               <div className="flex items-center justify-between pt-1 border-t border-[#0F2D33] text-[11px] text-[#88A9A2]">
                 <span className="flex items-center space-x-1.5">
