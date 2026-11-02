@@ -1,3 +1,4 @@
+
 [
   {
     "relation": [
@@ -7,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "in.arsca.taxconsultant",
       "sha256_cert_fingerprints": [
-        "69:F3:93:53:FD:34:D0:3F:F5:BE:6F:28:BF:9B:8A:B9:E9:F4:02:14:E9:5E:44:E6:B5:8A:9D:34:FF:2B:EA:B6"
+        "69:F3:93:53:FD:34:D0:3F:F5:BE:6F:28:BF:9B:8A:B9:E9:F4:02:14:E9:5E:44:E6:B5:8A:9D:34:FF:2B:EA:B6",
+        "80:64:75:78:58:1E:32:05:3B:FB:BD:51:58:33:E7:D2:96:81:0E:45:56:C1:27:51:E3:A0:B8:E2:D2:4A:97:84"
       ]
     }
   }
