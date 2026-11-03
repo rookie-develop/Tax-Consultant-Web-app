@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   MessageCircle,
@@ -29,6 +29,9 @@ interface HeaderProps {
   clientUser?: ClientUser | null;
   onOpenLogin: () => void;
   onLogout?: () => void;
+  isMobileMenuOpen?: boolean;
+  onToggleMobileMenu?: (open: boolean) => void;
+  onCloseMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = React.memo(({
@@ -43,8 +46,35 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   clientUser,
   onOpenLogin,
   onLogout,
+  isMobileMenuOpen: propIsMobileMenuOpen,
+  onToggleMobileMenu,
+  onCloseMobileMenu,
 }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [internalMenuOpen, setInternalMenuOpen] = useState(false);
+  const isControlled = propIsMobileMenuOpen !== undefined;
+  const isMobileMenuOpen = isControlled ? propIsMobileMenuOpen : internalMenuOpen;
+
+  const handleToggleMenu = useCallback(() => {
+    const nextState = !isMobileMenuOpen;
+    if (onToggleMobileMenu) {
+      onToggleMobileMenu(nextState);
+    }
+    if (!isControlled) {
+      setInternalMenuOpen(nextState);
+    }
+  }, [isMobileMenuOpen, onToggleMobileMenu, isControlled]);
+
+  const closeMobileMenu = useCallback(() => {
+    if (onCloseMobileMenu) {
+      onCloseMobileMenu();
+    } else if (onToggleMobileMenu) {
+      onToggleMobileMenu(false);
+    }
+    if (!isControlled) {
+      setInternalMenuOpen(false);
+    }
+  }, [onCloseMobileMenu, onToggleMobileMenu, isControlled]);
+
   const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
   const privacyDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +112,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         <button
           id="btn-brand-home"
           onClick={() => {
-            setIsMobileMenuOpen(false);
+            closeMobileMenu();
             onReset();
           }}
           className="flex items-baseline space-x-2 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B] rounded-lg p-1 transition-all cursor-pointer select-none min-w-0"
@@ -303,7 +333,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <button
             id="btn-mobile-nav-toggle"
             type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={handleToggleMenu}
             className="lg:hidden p-2.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer min-h-[42px] min-w-[42px] flex items-center justify-center touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B]"
             aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={isMobileMenuOpen}
@@ -366,7 +396,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                       id="mobile-nav-logout"
                       type="button"
                       onClick={() => {
-                        setIsMobileMenuOpen(false);
+                        closeMobileMenu();
                         onLogout();
                       }}
                       className="text-[10px] font-black uppercase text-white/70 hover:text-white px-2 py-1 rounded bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"
@@ -384,7 +414,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   id="menu-item-complaint"
                   type="button"
                   onClick={() => {
-                    setIsMobileMenuOpen(false);
+                    closeMobileMenu();
                     onOpenComplaint();
                   }}
                   className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
@@ -401,7 +431,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     id="menu-item-privacy-policy"
                     type="button"
                     onClick={() => {
-                      setIsMobileMenuOpen(false);
+                      closeMobileMenu();
                       onOpenPrivacyPolicy();
                     }}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
@@ -419,7 +449,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     id="menu-item-data-safety"
                     type="button"
                     onClick={() => {
-                      setIsMobileMenuOpen(false);
+                      closeMobileMenu();
                       onOpenDataSafety();
                     }}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
@@ -437,7 +467,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     id="menu-item-delete-account"
                     type="button"
                     onClick={() => {
-                      setIsMobileMenuOpen(false);
+                      closeMobileMenu();
                       onOpenDeleteAccount();
                     }}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
@@ -458,7 +488,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 <button
                   type="button"
                   onClick={() => {
-                    setIsMobileMenuOpen(false);
+                    closeMobileMenu();
                     onReset();
                   }}
                   className="text-[#20BA68] hover:underline font-bold"

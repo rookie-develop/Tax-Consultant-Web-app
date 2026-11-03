@@ -29,6 +29,15 @@ import {
 } from './config/firebase';
 
 import { BottomNav, BottomNavTab } from './components/BottomNav';
+import {
+  AppScreen,
+  AppOverlay,
+  NavigationHistoryState,
+  buildUrlForScreen,
+  parseLocationToState,
+  findCategoryById,
+  findSubServiceById,
+} from './utils/navigation';
 
 // Lazy load secondary views & modals to keep initial bundle lightweight on mobile
 const WhatsAppRequestView = lazy(() =>
@@ -88,29 +97,43 @@ export default function App() {
   const initialPath = rawPath.replace(/\/$/, '') || '/';
   const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
 
-  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
-  const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
+  // Initial routing detection from pathname, hash, and history.state
+  const initialNavState =
+    typeof window !== 'undefined'
+      ? parseLocationToState(window.location.pathname, window.location.hash, window.history.state)
+      : { screen: 'home' as AppScreen, depth: 0 };
+
+  const initialCat = initialNavState.categoryId
+    ? findCategoryById(initialNavState.categoryId)
+    : null;
+  const initialSub = initialNavState.subServiceId
+    ? findSubServiceById(initialCat, initialNavState.subServiceId)
+    : null;
+
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(initialCat);
+  const [selectedSubService, setSelectedSubService] = useState<SubService | null>(initialSub);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [isLoginPageOpen, setIsLoginPageOpen] = useState(initialHash === '#login');
-  const [isComplaintPageOpen, setIsComplaintPageOpen] = useState(initialHash === '#complaint');
-  const [isChannelsPageOpen, setIsChannelsPageOpen] = useState(initialHash === '#channels');
-  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(
-    initialPath === '/privacy-policy' || initialHash === '#privacy-policy'
+  const [isLoginPageOpen, setIsLoginPageOpen] = useState(initialNavState.screen === 'login');
+  const [isComplaintPageOpen, setIsComplaintPageOpen] = useState(initialNavState.screen === 'complaint');
+  const [isChannelsPageOpen, setIsChannelsPageOpen] = useState(initialNavState.screen === 'channels');
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(initialNavState.screen === 'privacy-policy');
+  const [isDataSafetyOpen, setIsDataSafetyOpen] = useState(initialNavState.screen === 'data-safety');
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(initialNavState.screen === 'delete-account');
+
+  // Overlays (Priority 1 in Android Back handling)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(initialNavState.overlay === 'mobileMenu');
+  const [cloudModalType, setCloudModalType] = useState<'unauthenticated' | 'not-found' | null>(
+    initialNavState.cloudType || null
   );
-  const [isDataSafetyOpen, setIsDataSafetyOpen] = useState(
-    initialPath === '/data-safety' || initialHash === '#data-safety'
+  const [comingSoonFeature, setComingSoonFeature] = useState<'Community' | 'Channels' | null>(
+    (initialNavState.comingSoonFeature as any) || null
   );
-  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(
-    initialPath === '/delete-account' || initialHash === '#delete-account'
-  );
-  const [comingSoonFeature, setComingSoonFeature] = useState<'Community' | 'Channels' | null>(null);
   const [modalFeature, setModalFeature] = useState<'Login' | 'Cloud Access' | 'My Requests' | null>(null);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(initialNavState.overlay === 'notifications');
 
   // Authenticated Client Session - Firebase Auth & Firestore Client Record
   const [clientUser, setClientUser] = useState<ClientUser | null>(null);
   const [clientRecord, setClientRecord] = useState<ClientRecord | null>(null);
-  const [cloudModalType, setCloudModalType] = useState<'unauthenticated' | 'not-found' | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges(async (user) => {
@@ -127,145 +150,234 @@ export default function App() {
     };
   }, []);
 
-  // Listen to browser back/forward buttons, URL path, and URL hash
+  // Centralized PopState Listener: Handles Android Native Back, Browser Back, and Forward
   useEffect(() => {
-    const handlePopState = () => {
-      const hash = window.location.hash;
-      const rawCurrentPath = window.location.pathname || '';
-      const path = rawCurrentPath.replace(/\/$/, '') || '/';
+    if (typeof window === 'undefined') return;
 
-      if (path === '/privacy-policy' || hash === '#privacy-policy') {
-        setIsPrivacyPolicyOpen(true);
-        setIsDataSafetyOpen(false);
-        setIsDeleteAccountOpen(false);
-        setIsComplaintPageOpen(false);
-        setIsChannelsPageOpen(false);
-        setIsLoginPageOpen(false);
-      } else if (path === '/data-safety' || hash === '#data-safety') {
-        setIsDataSafetyOpen(true);
-        setIsPrivacyPolicyOpen(false);
-        setIsDeleteAccountOpen(false);
-        setIsComplaintPageOpen(false);
-        setIsChannelsPageOpen(false);
-        setIsLoginPageOpen(false);
-      } else if (path === '/delete-account' || hash === '#delete-account') {
-        setIsDeleteAccountOpen(true);
-        setIsPrivacyPolicyOpen(false);
-        setIsDataSafetyOpen(false);
-        setIsComplaintPageOpen(false);
-        setIsChannelsPageOpen(false);
-        setIsLoginPageOpen(false);
-      } else if (hash === '#complaint') {
-        setIsComplaintPageOpen(true);
-        setIsChannelsPageOpen(false);
-        setIsLoginPageOpen(false);
-        setIsPrivacyPolicyOpen(false);
-        setIsDataSafetyOpen(false);
-        setIsDeleteAccountOpen(false);
-      } else if (hash === '#channels') {
-        setIsChannelsPageOpen(true);
-        setIsComplaintPageOpen(false);
-        setIsLoginPageOpen(false);
-        setIsPrivacyPolicyOpen(false);
-        setIsDataSafetyOpen(false);
-        setIsDeleteAccountOpen(false);
-      } else if (hash === '#login') {
-        setIsLoginPageOpen(true);
-        setIsChannelsPageOpen(false);
-        setIsComplaintPageOpen(false);
-        setIsPrivacyPolicyOpen(false);
-        setIsDataSafetyOpen(false);
-        setIsDeleteAccountOpen(false);
-      } else {
-        setIsComplaintPageOpen(false);
-        setIsChannelsPageOpen(false);
-        setIsLoginPageOpen(false);
-        setIsPrivacyPolicyOpen(false);
-        setIsDataSafetyOpen(false);
-        setIsDeleteAccountOpen(false);
+    // Tag the root entry with depth: 0 so native back knows when it has reached root/home
+    const currentState = parseLocationToState(
+      window.location.pathname,
+      window.location.hash,
+      window.history.state
+    );
+    if (!window.history.state || typeof window.history.state.depth !== 'number') {
+      window.history.replaceState(
+        { ...currentState, depth: 0, timestamp: Date.now() },
+        '',
+        window.location.href
+      );
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = parseLocationToState(
+        window.location.pathname,
+        window.location.hash,
+        event.state
+      );
+
+      // PRIORITY 1: Overlay Dismissal
+      // If the popped state no longer has an overlay, close all overlays immediately
+      setIsMobileMenuOpen(state.overlay === 'mobileMenu');
+      setCloudModalType(state.cloudType || null);
+      setComingSoonFeature((state.comingSoonFeature as any) || null);
+      if (!state.overlay) {
+        setModalFeature(null);
       }
+      setIsNotificationModalOpen(state.overlay === 'notifications');
+
+      // PRIORITY 2: Screen Synchronization
+      setIsLoginPageOpen(state.screen === 'login');
+      setIsComplaintPageOpen(state.screen === 'complaint');
+      setIsChannelsPageOpen(state.screen === 'channels');
+      setIsPrivacyPolicyOpen(state.screen === 'privacy-policy');
+      setIsDataSafetyOpen(state.screen === 'data-safety');
+      setIsDeleteAccountOpen(state.screen === 'delete-account');
+
+      if (state.screen === 'subservice') {
+        const cat = findCategoryById(state.categoryId);
+        const sub = findSubServiceById(cat, state.subServiceId);
+        setSelectedCategory(cat);
+        setSelectedSubService(sub);
+      } else if (state.screen === 'category') {
+        const cat = findCategoryById(state.categoryId);
+        setSelectedCategory(cat);
+        setSelectedSubService(null);
+      } else if (state.screen === 'home') {
+        setSelectedCategory(null);
+        setSelectedSubService(null);
+      }
+
+      scrollToTop();
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Determine current step
+  // Determine current step (Step 1: All categories, Step 2: Subservices, Step 3: WhatsApp preview)
   const currentStep: 1 | 2 | 3 = selectedSubService ? 3 : selectedCategory ? 2 : 1;
 
-  // Handlers with useCallback to prevent unnecessary re-renders of memoized components
-  const handleSelectCategory = useCallback((category: ServiceCategory) => {
-    setIsLoginPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setSelectedCategory(category);
-    setSelectedSubService(null);
-    scrollToTop();
-  }, []);
+  // Centralized Navigation Push
+  const navigateTo = useCallback(
+    (screen: AppScreen, categoryId?: string | null, subServiceId?: string | null) => {
+      const currentDepth = (window.history.state?.depth as number) ?? 0;
+      const nextDepth = currentDepth + 1;
+      const nextState: NavigationHistoryState = {
+        screen,
+        categoryId: categoryId || null,
+        subServiceId: subServiceId || null,
+        depth: nextDepth,
+        timestamp: Date.now(),
+      };
+      const url = buildUrlForScreen(screen, categoryId, subServiceId);
+      window.history.pushState(nextState, '', url);
 
-  const handleSelectSubService = useCallback((subService: SubService) => {
-    setIsLoginPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setSelectedSubService(subService);
-    scrollToTop();
-  }, []);
+      // Dismiss any open overlays
+      setIsMobileMenuOpen(false);
+      setCloudModalType(null);
+      setComingSoonFeature(null);
+      setModalFeature(null);
+      setIsNotificationModalOpen(false);
 
-  const handleSelectServiceFromSearch = useCallback(
-    (category: ServiceCategory, subService: SubService) => {
-      setIsLoginPageOpen(false);
-      setIsComplaintPageOpen(false);
-      setIsChannelsPageOpen(false);
-      setSelectedCategory(category);
-      setSelectedSubService(subService);
-      setIsMobileSearchOpen(false);
+      // Sync React state
+      setIsLoginPageOpen(screen === 'login');
+      setIsComplaintPageOpen(screen === 'complaint');
+      setIsChannelsPageOpen(screen === 'channels');
+      setIsPrivacyPolicyOpen(screen === 'privacy-policy');
+      setIsDataSafetyOpen(screen === 'data-safety');
+      setIsDeleteAccountOpen(screen === 'delete-account');
+
+      if (screen === 'subservice') {
+        const cat = findCategoryById(categoryId);
+        const sub = findSubServiceById(cat, subServiceId);
+        setSelectedCategory(cat);
+        setSelectedSubService(sub);
+      } else if (screen === 'category') {
+        const cat = findCategoryById(categoryId);
+        setSelectedCategory(cat);
+        setSelectedSubService(null);
+      } else if (screen === 'home') {
+        setSelectedCategory(null);
+        setSelectedSubService(null);
+      }
+
       scrollToTop();
     },
     []
   );
 
-  const handleGoToStep1 = useCallback(() => {
-    setIsLoginPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsDeleteAccountOpen(false);
-    setSelectedCategory(null);
-    setSelectedSubService(null);
-    setIsMobileSearchOpen(false);
-    if (window.location.pathname !== '/' || window.location.hash) {
-      window.history.pushState(null, '', '/');
+  // Centralized Overlay Open / Close Helpers
+  const openOverlay = useCallback(
+    (
+      overlay: AppOverlay,
+      metadata?: { cloudType?: 'unauthenticated' | 'not-found'; comingSoonFeature?: string }
+    ) => {
+      const currentDepth = (window.history.state?.depth as number) ?? 0;
+      const currentScreenState = parseLocationToState(
+        window.location.pathname,
+        window.location.hash,
+        window.history.state
+      );
+      const nextState: NavigationHistoryState = {
+        ...currentScreenState,
+        overlay,
+        cloudType: metadata?.cloudType || null,
+        comingSoonFeature: metadata?.comingSoonFeature || null,
+        depth: currentDepth + 1,
+        timestamp: Date.now(),
+      };
+      window.history.pushState(nextState, '', window.location.href);
+
+      if (overlay === 'mobileMenu') setIsMobileMenuOpen(true);
+      if (overlay === 'cloudAccess') setCloudModalType(metadata?.cloudType || 'unauthenticated');
+      if (overlay === 'comingSoon') {
+        setComingSoonFeature((metadata?.comingSoonFeature as any) || 'Community');
+        setModalFeature(null);
+      }
+      if (overlay === 'notifications') setIsNotificationModalOpen(true);
+    },
+    []
+  );
+
+  const closeOverlay = useCallback(() => {
+    if (window.history.state?.overlay) {
+      window.history.back();
+    } else {
+      setIsMobileMenuOpen(false);
+      setCloudModalType(null);
+      setComingSoonFeature(null);
+      setModalFeature(null);
+      setIsNotificationModalOpen(false);
     }
-    scrollToTop();
   }, []);
 
+  // Centralized Back Navigation: pops history when inside an app sub-screen, or falls back to parent
+  const navigateBack = useCallback(
+    (fallbackFn?: () => void) => {
+      const currentDepth = (window.history.state?.depth as number) ?? 0;
+      if (currentDepth > 0) {
+        window.history.back();
+      } else if (fallbackFn) {
+        fallbackFn();
+      } else {
+        navigateTo('home');
+      }
+    },
+    [navigateTo]
+  );
+
+  // Service Selection Handlers
+  const handleSelectCategory = useCallback(
+    (category: ServiceCategory) => {
+      navigateTo('category', category.id);
+    },
+    [navigateTo]
+  );
+
+  const handleSelectSubService = useCallback(
+    (subService: SubService) => {
+      if (selectedCategory) {
+        navigateTo('subservice', selectedCategory.id, subService.id);
+      }
+    },
+    [navigateTo, selectedCategory]
+  );
+
+  const handleSelectServiceFromSearch = useCallback(
+    (category: ServiceCategory, subService: SubService) => {
+      navigateTo('subservice', category.id, subService.id);
+    },
+    [navigateTo]
+  );
+
+  // Go To Step 1 (Home): Returns directly to root without piling up history entries
+  const handleGoToStep1 = useCallback(() => {
+    const currentDepth = (window.history.state?.depth as number) ?? 0;
+    if (currentDepth > 0) {
+      window.history.go(-currentDepth);
+    } else {
+      navigateTo('home');
+    }
+  }, [navigateTo]);
+
+  // Go To Step 2 (Back from WhatsApp preview to subservices list)
   const handleGoToStep2 = useCallback(() => {
-    setIsLoginPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setSelectedSubService(null);
-    scrollToTop();
-  }, []);
+    navigateBack(() => {
+      if (selectedCategory) {
+        navigateTo('category', selectedCategory.id);
+      } else {
+        navigateTo('home');
+      }
+    });
+  }, [navigateBack, selectedCategory, navigateTo]);
 
   const handleOpenLogin = useCallback(() => {
-    setIsLoginPageOpen(true);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsMobileSearchOpen(false);
-    if (window.location.hash !== '#login') {
-      window.history.pushState({ page: 'login' }, '', '#login');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('login');
+  }, [navigateTo]);
 
   const handleCloseLogin = useCallback(() => {
-    setIsLoginPageOpen(false);
-    if (window.location.hash === '#login') {
-      window.history.back();
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleLoginSuccess = useCallback(async (user: ClientUser) => {
     setClientUser(user);
@@ -275,9 +387,6 @@ export default function App() {
     }
     // Remain on login/profile screen after successful login
     setIsLoginPageOpen(true);
-    if (window.location.hash !== '#login') {
-      window.history.pushState({ page: 'login' }, '', '#login');
-    }
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -289,7 +398,7 @@ export default function App() {
 
   const handleCloudAccess = useCallback(async () => {
     if (!clientUser) {
-      setCloudModalType('unauthenticated');
+      openOverlay('cloudAccess', { cloudType: 'unauthenticated' });
       return;
     }
 
@@ -308,155 +417,70 @@ export default function App() {
         window.location.href = driveUrl;
       }
     } else {
-      setCloudModalType('not-found');
+      openOverlay('cloudAccess', { cloudType: 'not-found' });
     }
-  }, [clientUser, clientRecord]);
+  }, [clientUser, clientRecord, openOverlay]);
 
-  const handleOpenModalFeature = useCallback((feat: 'Login' | 'Cloud Access') => {
-    if (feat === 'Login') {
-      handleOpenLogin();
-    } else if (feat === 'Cloud Access') {
-      handleCloudAccess();
-    } else {
-      setModalFeature(feat);
-    }
-  }, [handleOpenLogin, handleCloudAccess]);
+  const handleOpenModalFeature = useCallback(
+    (feat: 'Login' | 'Cloud Access') => {
+      if (feat === 'Login') {
+        handleOpenLogin();
+      } else if (feat === 'Cloud Access') {
+        handleCloudAccess();
+      } else {
+        openOverlay('comingSoon', { comingSoonFeature: feat });
+      }
+    },
+    [handleOpenLogin, handleCloudAccess, openOverlay]
+  );
 
   const handleOpenComplaint = useCallback(() => {
-    setModalFeature(null);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsLoginPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsComplaintPageOpen(true);
-    if (window.location.hash !== '#complaint') {
-      window.history.pushState({ page: 'complaint' }, '', '#complaint');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('complaint');
+  }, [navigateTo]);
 
   const handleBackFromComplaint = useCallback(() => {
-    setIsComplaintPageOpen(false);
-    if (window.location.hash === '#complaint') {
-      window.history.back();
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleOpenChannels = useCallback(() => {
-    setModalFeature(null);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsLoginPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(true);
-    if (window.location.hash !== '#channels') {
-      window.history.pushState({ page: 'channels' }, '', '#channels');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('channels');
+  }, [navigateTo]);
 
   const handleBackFromChannels = useCallback(() => {
-    setIsChannelsPageOpen(false);
-    if (window.location.hash === '#channels') {
-      window.history.back();
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleOpenPrivacyPolicy = useCallback(() => {
-    setModalFeature(null);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsLoginPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsPrivacyPolicyOpen(true);
-    if (window.location.pathname !== '/privacy-policy') {
-      window.history.pushState({ page: 'privacy-policy' }, '', '/privacy-policy');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('privacy-policy');
+  }, [navigateTo]);
 
   const handleBackFromPrivacyPolicy = useCallback(() => {
-    setIsPrivacyPolicyOpen(false);
-    if (window.location.pathname === '/privacy-policy' || window.location.hash === '#privacy-policy') {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.history.pushState(null, '', '/');
-      }
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleOpenDataSafety = useCallback(() => {
-    setModalFeature(null);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsLoginPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(true);
-    if (window.location.pathname !== '/data-safety') {
-      window.history.pushState({ page: 'data-safety' }, '', '/data-safety');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('data-safety');
+  }, [navigateTo]);
 
   const handleBackFromDataSafety = useCallback(() => {
-    setIsDataSafetyOpen(false);
-    if (window.location.pathname === '/data-safety' || window.location.hash === '#data-safety') {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.history.pushState(null, '', '/');
-      }
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleOpenDeleteAccount = useCallback(() => {
-    setModalFeature(null);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsLoginPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsComplaintPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsDeleteAccountOpen(true);
-    if (window.location.pathname !== '/delete-account') {
-      window.history.pushState({ page: 'delete-account' }, '', '/delete-account');
-    }
-    scrollToTop();
-  }, []);
+    navigateTo('delete-account');
+  }, [navigateTo]);
 
   const handleBackFromDeleteAccount = useCallback(() => {
-    setIsDeleteAccountOpen(false);
-    if (window.location.pathname === '/delete-account' || window.location.hash === '#delete-account') {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.history.pushState(null, '', '/');
-      }
-    }
-    scrollToTop();
-  }, []);
+    navigateBack(handleGoToStep1);
+  }, [navigateBack, handleGoToStep1]);
 
   const handleSelectCommunity = useCallback(() => {
-    setComingSoonFeature('Community');
-  }, []);
+    openOverlay('comingSoon', { comingSoonFeature: 'Community' });
+  }, [openOverlay]);
 
   const handleSelectChannels = useCallback(() => {
     handleOpenChannels();
   }, [handleOpenChannels]);
-
-  const handleCloseComingSoon = useCallback(() => {
-    setComingSoonFeature(null);
-  }, []);
 
   // Bottom Navigation Active Tab Resolution
   const activeTab: BottomNavTab = isLoginPageOpen
@@ -474,48 +498,20 @@ export default function App() {
     : 'home';
 
   const handleBottomSelectHome = useCallback(() => {
-    setModalFeature(null);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsDeleteAccountOpen(false);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsNotificationModalOpen(false);
-    setIsLoginPageOpen(false);
     handleGoToStep1();
   }, [handleGoToStep1]);
 
   const handleBottomSelectRequests = useCallback(() => {
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsDeleteAccountOpen(false);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsNotificationModalOpen(false);
-    setIsLoginPageOpen(false);
-    setModalFeature('My Requests');
-  }, []);
+    openOverlay('comingSoon', { comingSoonFeature: 'My Requests' });
+  }, [openOverlay]);
 
   const handleBottomSelectLogin = useCallback(() => {
-    setModalFeature(null);
-    setIsComplaintPageOpen(false);
-    setIsChannelsPageOpen(false);
-    setIsPrivacyPolicyOpen(false);
-    setIsDataSafetyOpen(false);
-    setIsDeleteAccountOpen(false);
-    setCloudModalType(null);
-    setComingSoonFeature(null);
-    setIsNotificationModalOpen(false);
     handleOpenLogin();
   }, [handleOpenLogin]);
 
   return (
     <div className="min-h-screen bg-[#F4F0E8] text-[#0F201C] flex flex-col font-sans selection:bg-[#23A87B]/25 selection:text-[#081E23]">
-      {/* Top Header */}
+      {/* Top Header with Controlled Mobile Menu */}
       <Header
         config={config}
         onReset={handleGoToStep1}
@@ -528,6 +524,15 @@ export default function App() {
         clientUser={clientUser}
         onOpenLogin={handleOpenLogin}
         onLogout={handleLogout}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={(open) => {
+          if (open) {
+            openOverlay('mobileMenu');
+          } else {
+            closeOverlay();
+          }
+        }}
+        onCloseMobileMenu={closeOverlay}
       />
 
       {/* HOME PAGE HEADER: Greeting, Heading, Rounded Search Bar */}
@@ -792,7 +797,7 @@ export default function App() {
           <CloudAccessModal
             isOpen={cloudModalType !== null}
             type={cloudModalType}
-            onClose={() => setCloudModalType(null)}
+            onClose={closeOverlay}
             onLogin={handleOpenLogin}
           />
         )}
@@ -803,10 +808,7 @@ export default function App() {
         <ComingSoonModal
           isOpen={comingSoonFeature !== null || !!modalFeature}
           feature={comingSoonFeature || modalFeature || ''}
-          onClose={() => {
-            setComingSoonFeature(null);
-            setModalFeature(null);
-          }}
+          onClose={closeOverlay}
         />
       </Suspense>
 
@@ -814,7 +816,7 @@ export default function App() {
       <Suspense fallback={null}>
         <NotificationModal
           isOpen={isNotificationModalOpen}
-          onClose={() => setIsNotificationModalOpen(false)}
+          onClose={closeOverlay}
         />
       </Suspense>
 
