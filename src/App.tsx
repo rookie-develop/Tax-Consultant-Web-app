@@ -38,6 +38,7 @@ import {
   findCategoryById,
   findSubServiceById,
 } from './utils/navigation';
+import { useDynamicGreeting } from './utils/greeting';
 
 // Lazy load secondary views & modals to keep initial bundle lightweight on mobile
 const WhatsAppRequestView = lazy(() =>
@@ -87,6 +88,7 @@ const scrollToTop = () => {
 
 export default function App() {
   const config = DEFAULT_CONFIG;
+  const greeting = useDynamicGreeting();
 
   // State management for hierarchical flow:
   // Step 1: No category selected (shows all categories)
@@ -543,7 +545,7 @@ export default function App() {
             <div className="flex items-center justify-between">
               <div className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#20BA68]">
                 <span className="w-2 h-2 rounded-full bg-[#20BA68] animate-pulse" />
-                <span>Good Morning{clientUser?.displayName ? `, ${clientUser.displayName.split(' ')[0]}` : ''}</span>
+                <span>{greeting}{clientUser?.displayName ? `, ${clientUser.displayName.split(' ')[0]}` : ''}</span>
               </div>
             </div>
 
