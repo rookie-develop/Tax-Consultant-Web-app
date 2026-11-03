@@ -222,8 +222,9 @@ export default function App() {
   // Centralized Navigation Push
   const navigateTo = useCallback(
     (screen: AppScreen, categoryId?: string | null, subServiceId?: string | null) => {
+      const isOverlayActive = Boolean(window.history.state?.overlay);
       const currentDepth = (window.history.state?.depth as number) ?? 0;
-      const nextDepth = currentDepth + 1;
+      const nextDepth = isOverlayActive ? currentDepth : currentDepth + 1;
       const nextState: NavigationHistoryState = {
         screen,
         categoryId: categoryId || null,
@@ -232,7 +233,11 @@ export default function App() {
         timestamp: Date.now(),
       };
       const url = buildUrlForScreen(screen, categoryId, subServiceId);
-      window.history.pushState(nextState, '', url);
+      if (isOverlayActive) {
+        window.history.replaceState(nextState, '', url);
+      } else {
+        window.history.pushState(nextState, '', url);
+      }
 
       // Dismiss any open overlays
       setIsMobileMenuOpen(false);
@@ -352,14 +357,9 @@ export default function App() {
     [navigateTo]
   );
 
-  // Go To Step 1 (Home): Returns directly to root without piling up history entries
+  // Go To Step 1 (Home): Returns directly to root without navigation glitch
   const handleGoToStep1 = useCallback(() => {
-    const currentDepth = (window.history.state?.depth as number) ?? 0;
-    if (currentDepth > 0) {
-      window.history.go(-currentDepth);
-    } else {
-      navigateTo('home');
-    }
+    navigateTo('home');
   }, [navigateTo]);
 
   // Go To Step 2 (Back from WhatsApp preview to subservices list)

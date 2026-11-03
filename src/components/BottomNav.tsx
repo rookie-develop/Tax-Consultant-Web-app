@@ -38,7 +38,7 @@ export const BottomNav: React.FC<BottomNavProps> = React.memo(({
     <nav
       id="bottom-navigation-bar"
       aria-label="Bottom Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#081E23] border-t border-[#0F2D33] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] pb-[max(0.35rem,env(safe-area-inset-bottom))]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#081E23] border-t border-[#0F2D33] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] pb-[max(0.35rem,env(safe-area-inset-bottom))]"
     >
       <div className="max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-2 sm:px-4 h-16 sm:h-18 flex items-end justify-between relative">
         {/* 1. HOME */}

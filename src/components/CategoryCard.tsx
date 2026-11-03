@@ -61,8 +61,11 @@ export const CategoryCard: React.FC<CategoryCardProps> = React.memo(({
   };
 
   const handleClick = () => {
-    if (onSelect) onSelect(category);
-    if (onClick) onClick(category);
+    if (onSelect) {
+      onSelect(category);
+    } else if (onClick) {
+      onClick(category);
+    }
   };
 
   return (

@@ -84,10 +84,7 @@ export const CloudAccessModal: React.FC<CloudAccessModalProps> = React.memo(({
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      onClose();
-                      onLogin();
-                    }}
+                    onClick={onLogin}
                     className="w-full bg-[#081E23] hover:bg-[#23A87B] text-white font-black py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer touch-manipulation flex items-center justify-center space-x-2"
                   >
                     <LogIn className="w-4 h-4" />

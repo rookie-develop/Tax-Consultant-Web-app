@@ -45,19 +45,19 @@ export function buildUrlForScreen(
     case 'delete-account':
       return '/delete-account';
     case 'login':
-      return '#login';
+      return '/#login';
     case 'complaint':
-      return '#complaint';
+      return '/#complaint';
     case 'channels':
-      return '#channels';
+      return '/#channels';
     case 'subservice':
       return categoryId && subServiceId
-        ? `#services/${encodeURIComponent(categoryId)}/${encodeURIComponent(subServiceId)}`
-        : '#services';
+        ? `/#services/${encodeURIComponent(categoryId)}/${encodeURIComponent(subServiceId)}`
+        : '/#services';
     case 'category':
       return categoryId
-        ? `#services/${encodeURIComponent(categoryId)}`
-        : '#services';
+        ? `/#services/${encodeURIComponent(categoryId)}`
+        : '/#services';
     case 'home':
     default:
       return '/';
@@ -93,18 +93,7 @@ export function parseLocationToState(
     };
   }
 
-  // 2. Direct URL path matches (for cold starts, page refreshes, direct links)
-  if (cleanPath === '/privacy-policy' || cleanHash === '#privacy-policy') {
-    return { screen: 'privacy-policy', depth: 0 };
-  }
-  if (cleanPath === '/data-safety' || cleanHash === '#data-safety') {
-    return { screen: 'data-safety', depth: 0 };
-  }
-  if (cleanPath === '/delete-account' || cleanHash === '#delete-account') {
-    return { screen: 'delete-account', depth: 0 };
-  }
-
-  // 3. Hash-based screen matches
+  // 2. Hash-based screen matches (checked first if hash exists)
   if (cleanHash === '#login') {
     return { screen: 'login', depth: 0 };
   }
@@ -115,7 +104,7 @@ export function parseLocationToState(
     return { screen: 'channels', depth: 0 };
   }
 
-  // 4. Subservice hash pattern: #services/:categoryId/:subServiceId
+  // Subservice hash pattern: #services/:categoryId/:subServiceId
   const subMatch = cleanHash.match(/^#services\/([^/]+)\/([^/]+)$/);
   if (subMatch) {
     const catId = decodeURIComponent(subMatch[1]);
@@ -128,7 +117,7 @@ export function parseLocationToState(
     };
   }
 
-  // 5. Category hash pattern: #services/:categoryId
+  // Category hash pattern: #services/:categoryId
   const catMatch = cleanHash.match(/^#services\/([^/]+)$/);
   if (catMatch) {
     const catId = decodeURIComponent(catMatch[1]);
@@ -139,7 +128,18 @@ export function parseLocationToState(
     };
   }
 
-  // 6. Default to home
+  // 3. Direct URL path matches (for cold starts, page refreshes, direct links)
+  if (cleanPath === '/privacy-policy' || cleanHash === '#privacy-policy') {
+    return { screen: 'privacy-policy', depth: 0 };
+  }
+  if (cleanPath === '/data-safety' || cleanHash === '#data-safety') {
+    return { screen: 'data-safety', depth: 0 };
+  }
+  if (cleanPath === '/delete-account' || cleanHash === '#delete-account') {
+    return { screen: 'delete-account', depth: 0 };
+  }
+
+  // 4. Default to home
   return { screen: 'home', depth: 0 };
 }
 

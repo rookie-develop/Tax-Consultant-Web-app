@@ -34,18 +34,22 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
 
   // Click outside to close dropdown
   useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('touchend', handleClickOutside, { passive: true });
+    }, 0);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('touchend', handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   // Forgiving search across categories and their sub-services
   const searchResults = useMemo(() => {

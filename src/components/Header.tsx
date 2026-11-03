@@ -111,10 +111,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         {/* Brand Logo & Name */}
         <button
           id="btn-brand-home"
-          onClick={() => {
-            closeMobileMenu();
-            onReset();
-          }}
+          onClick={onReset}
           className="flex items-baseline space-x-2 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#23A87B] rounded-lg p-1 transition-all cursor-pointer select-none min-w-0"
           aria-label="ARSCA Tax Compliance Home"
         >
@@ -395,10 +392,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     <button
                       id="mobile-nav-logout"
                       type="button"
-                      onClick={() => {
-                        closeMobileMenu();
-                        onLogout();
-                      }}
+                      onClick={onLogout}
                       className="text-[10px] font-black uppercase text-white/70 hover:text-white px-2 py-1 rounded bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"
                     >
                       Logout
@@ -413,10 +407,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 <button
                   id="menu-item-complaint"
                   type="button"
-                  onClick={() => {
-                    closeMobileMenu();
-                    onOpenComplaint();
-                  }}
+                  onClick={onOpenComplaint}
                   className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
                 >
                   <Mail className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
@@ -430,10 +421,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   <button
                     id="menu-item-privacy-policy"
                     type="button"
-                    onClick={() => {
-                      closeMobileMenu();
-                      onOpenPrivacyPolicy();
-                    }}
+                    onClick={onOpenPrivacyPolicy}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
                   >
                     <Shield className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
@@ -448,10 +436,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   <button
                     id="menu-item-data-safety"
                     type="button"
-                    onClick={() => {
-                      closeMobileMenu();
-                      onOpenDataSafety();
-                    }}
+                    onClick={onOpenDataSafety}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
                   >
                     <ShieldCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#20BA68] shrink-0 stroke-[2]" />
@@ -466,10 +451,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   <button
                     id="menu-item-delete-account"
                     type="button"
-                    onClick={() => {
-                      closeMobileMenu();
-                      onOpenDeleteAccount();
-                    }}
+                    onClick={onOpenDeleteAccount}
                     className="flex items-center space-x-2 sm:space-x-2.5 p-2.5 sm:p-3 rounded-xl bg-[#0F333B] hover:bg-[#15424D] active:bg-[#1A505D] border border-[#184650] text-white transition-colors cursor-pointer text-left w-full min-h-[44px] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20BA68]"
                   >
                     <ShieldAlert className="w-4 h-4 text-[#20BA68] shrink-0 stroke-[2]" />
@@ -487,10 +469,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    closeMobileMenu();
-                    onReset();
-                  }}
+                  onClick={onReset}
                   className="text-[#20BA68] hover:underline font-bold"
                 >
                   All Services

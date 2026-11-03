@@ -346,15 +346,21 @@ export const SubServiceCard: React.FC<SubServiceCardProps> = React.memo(({
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onSelect) onSelect(subService);
-    if (onClick) onClick(subService);
+    if (onSelect) {
+      onSelect(subService);
+    } else if (onClick) {
+      onClick(subService);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      if (onSelect) onSelect(subService);
-      if (onClick) onClick(subService);
+      if (onSelect) {
+        onSelect(subService);
+      } else if (onClick) {
+        onClick(subService);
+      }
     }
   };
 
