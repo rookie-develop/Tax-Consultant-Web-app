@@ -118,8 +118,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white group-hover:text-[#23A87B] transition-colors">
             {config.firmName}
           </span>
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#7F9D97] font-semibold hidden min-[390px]:inline-block">
-            Tax Compliance v1.0
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#7F9D97] font-semibold inline-block whitespace-nowrap">
+            Tax Compliance
           </span>
         </button>
 
