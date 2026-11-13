@@ -86,7 +86,7 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
         <div className="relative z-10 space-y-3">
           <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-xs px-3 py-1 rounded-full text-[11px] font-semibold text-[#20BA68]">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Account Management & Data Rights</span>
+            <span>Account &amp; Data Management</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
@@ -94,7 +94,7 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
           </h1>
 
           <p className="text-xs sm:text-sm text-[#C5DAD4] leading-relaxed max-w-xl">
-            You can submit a request to delete your {config.firmName} Tax Consultant app account and associated app data. After verifying your request, {config.firmName} aims to complete the deletion within 24–48 hours. You will receive a confirmation email at your verified account email address once deletion is completed.
+            You can request permanent deletion of your {config.firmName} Tax Consultant app account and linked profile data. Deleting your app account removes your access to the app and does not affect your Google Account.
           </p>
         </div>
       </div>
@@ -109,10 +109,10 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
             </div>
             <div className="space-y-1">
               <h2 className="text-base sm:text-lg font-bold text-[#081E23]">
-                Official Account Deletion Form
+                Account Deletion Request Form
               </h2>
               <p className="text-xs sm:text-sm text-[#5C6E6A] leading-relaxed">
-                Click below to open our official, publicly accessible Google Form. No login required.
+                Use the public Google Form below to submit your deletion request. You do not need to sign in to the app to open or submit this form.
               </p>
             </div>
           </div>
@@ -131,25 +131,25 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
           </div>
 
           <p className="text-[11px] text-[#7F9D97] leading-relaxed">
-            Opens in a secure new browser tab directly on Google Forms.
+            Opens our Google Form in a new browser tab.
           </p>
         </div>
 
         {/* Process & Policy Details */}
         <div className="space-y-4 pt-2">
           <h3 className="text-sm font-bold text-[#081E23] uppercase tracking-wider">
-            Important Information Regarding Account Deletion
+            What Happens Next &amp; What Is Deleted
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Timeline */}
+            {/* Timeline & Verification */}
             <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#ECE7DE] space-y-2">
               <div className="flex items-center space-x-2 text-[#081E23] font-bold text-xs sm:text-sm">
                 <Clock className="w-4 h-4 text-[#20BA68]" />
-                <span>24–48 Hours Turnaround</span>
+                <span>Verification &amp; Processing Time</span>
               </div>
               <p className="text-xs text-[#5C6E6A] leading-relaxed">
-                After receiving and verifying your request, {config.firmName} aims to process the deletion within 24–48 hours. If additional identity verification is needed, you will be promptly contacted.
+                After receiving your request, our team verifies your identity to protect your account and aims to complete deletion within <strong>24–48 hours</strong>. If extra verification is needed, we will contact you.
               </p>
             </div>
 
@@ -160,7 +160,7 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
                 <span>Email Confirmation</span>
               </div>
               <p className="text-xs text-[#5C6E6A] leading-relaxed">
-                A formal confirmation email will be sent to your verified registered account email address as soon as account deletion is completed.
+                Once your app account has been deleted, we send a confirmation email to the verified email address associated with your account.
               </p>
             </div>
 
@@ -168,10 +168,10 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
             <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#ECE7DE] space-y-2">
               <div className="flex items-center space-x-2 text-[#081E23] font-bold text-xs sm:text-sm">
                 <Lock className="w-4 h-4 text-[#20BA68]" />
-                <span>ARSCA App Account Only</span>
+                <span>What Information Is Deleted</span>
               </div>
               <p className="text-xs text-[#5C6E6A] leading-relaxed">
-                This request deletes your {config.firmName} app account profile and Firebase authentication mapping. It does <strong>not</strong> delete your Google Account.
+                This removes your {config.firmName} app account profile, Firebase sign-in access, and Cloud Firestore account mapping (name, email link, and user ID). It does <strong>not</strong> delete your Google Account.
               </p>
             </div>
 
@@ -179,10 +179,10 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
             <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#ECE7DE] space-y-2">
               <div className="flex items-center space-x-2 text-[#081E23] font-bold text-xs sm:text-sm">
                 <FileText className="w-4 h-4 text-[#20BA68]" />
-                <span>Legal Record Retention</span>
+                <span>Records Retained by Law</span>
               </div>
               <p className="text-xs text-[#5C6E6A] leading-relaxed">
-                Certain tax or business records may need to be retained where required by Indian statutory law (Income Tax Act, CGST Act) and professional regulatory mandates.
+                Client tax computation files, filed returns, and statutory business records must be retained where required under Indian tax laws (such as the Income Tax Act, 1961 and CGST Act, 2017) and professional regulations.
               </p>
             </div>
           </div>
@@ -192,17 +192,17 @@ export const DeleteAccountView: React.FC<DeleteAccountViewProps> = React.memo(({
         <div className="p-4.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2 text-xs text-amber-950">
           <div className="flex items-center space-x-2 font-bold text-amber-900">
             <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>Need Help or Have Questions?</span>
+            <span>Need Help or Prefer Email?</span>
           </div>
           <p className="text-amber-900/90 leading-relaxed">
-            You can also contact our compliance officer directly at{' '}
+            If you have questions or would like to submit your request by email, please contact us at{' '}
             <a
               href={`mailto:${verifiedContactEmail}?subject=Account%20Deletion%20Assistance`}
               className="font-bold underline hover:text-amber-800"
             >
               {verifiedContactEmail}
             </a>
-            {' '}if you need assistance with your request.
+            {' '}from your registered email address.
           </p>
         </div>
       </div>
